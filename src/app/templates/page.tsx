@@ -48,7 +48,10 @@ export default function TemplatesPage() {
                 <h3 className="text-xl font-semibold text-gray-900">{template.name}</h3>
                 <p className="mt-2 text-gray-600">{template.description}</p>
                 <button
-                  onClick={() => router.push(`/editor/${template.id}`)}
+                  onClick={() => {
+                    console.log('Template selected:', template.id)
+                    router.push(`/editor/${template.id}`)
+                  }}
                   className={`mt-4 w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white transition-all duration-200 ${
                     template.id === 'modern-navy'
                       ? 'bg-[#0A2647] hover:bg-[#0A3157]'

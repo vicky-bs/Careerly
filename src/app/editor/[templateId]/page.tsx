@@ -162,12 +162,16 @@ export default function EditorPage() {
   ]
 
   const renderTemplate = () => {
+    console.log('Rendering template:', templateId)
     switch (templateId) {
       case 'modern-teal':
+        console.log('Rendering ModernTealTemplate')
         return <ModernTealTemplate />
       case 'modern-navy':
+        console.log('Rendering ModernNavyTemplate')
         return <ModernNavyTemplate />
       default:
+        console.log('Template not found:', templateId)
         return <div>Template not found</div>
     }
   }

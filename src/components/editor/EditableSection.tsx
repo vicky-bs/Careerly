@@ -43,11 +43,14 @@ export function EditableSection({ initialContent, className = '', onHover, onBlu
       editor.setOptions({ editable: true })
     },
     editable: true,
-    immediatelyRender: false,
+    immediatelyRender: true,
   })
 
   useEffect(() => {
     setIsMounted(true)
+    return () => {
+      setIsMounted(false)
+    }
   }, [])
 
   const handleMouseEnter = () => {
@@ -76,7 +79,12 @@ export function EditableSection({ initialContent, className = '', onHover, onBlu
   }
 
   if (!editor) {
-    return null
+    return (
+      <div 
+        className={className}
+        dangerouslySetInnerHTML={{ __html: initialContent }}
+      />
+    )
   }
 
   return (
