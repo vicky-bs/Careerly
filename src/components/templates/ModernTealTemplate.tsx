@@ -41,11 +41,11 @@ export function ModernTealTemplate() {
         <>
           <div className="mb-8">
             <EditableSection
-              initialContent="<h1 class='text-3xl font-bold mb-2'>VIKRAM SHIVARAM</h1>"
+              initialContent="<h1 class='text-3xl font-bold mb-2'>Your Name</h1>"
               className="!block text-white"
             />
             <EditableSection
-              initialContent="<h2 class='text-xl'>Program Lead</h2>"
+              initialContent="<h2 class='text-xl'>Your Title</h2>"
               className="!block text-white"
             />
           </div>
@@ -56,28 +56,28 @@ export function ModernTealTemplate() {
               <div className="flex items-center gap-3">
                 <PhoneIcon className="h-5 w-5" />
                 <EditableSection
-                  initialContent="+91 98803 23008"
+                  initialContent="Phone number"
                   className="!block text-white"
                 />
               </div>
               <div className="flex items-center gap-3">
                 <EnvelopeIcon className="h-5 w-5" />
                 <EditableSection
-                  initialContent="vickybs@gmail.com"
+                  initialContent="Email address"
                   className="!block text-white"
                 />
               </div>
               <div className="flex items-center gap-3">
                 <GlobeAltIcon className="h-5 w-5" />
                 <EditableSection
-                  initialContent="linkedin.com/in/vikramshivaram"
+                  initialContent="Website/LinkedIn"
                   className="!block text-white"
                 />
               </div>
               <div className="flex items-center gap-3">
                 <MapPinIcon className="h-5 w-5" />
                 <EditableSection
-                  initialContent="Bangalore, India"
+                  initialContent="Location"
                   className="!block text-white"
                 />
               </div>
@@ -89,21 +89,21 @@ export function ModernTealTemplate() {
             <div className="space-y-4">
               <div>
                 <EditableSection
-                  initialContent="<h3 class='font-semibold mb-1'>Leadership</h3>"
+                  initialContent="<h3 class='font-semibold mb-1'>Strength Title</h3>"
                   className="!block text-white"
                 />
                 <EditableSection
-                  initialContent="<p>Strong leadership skills and ability to motivate teams towards common goals</p>"
+                  initialContent="<p>Strength description</p>"
                   className="!block text-white"
                 />
               </div>
               <div>
                 <EditableSection
-                  initialContent="<h3 class='font-semibold mb-1'>Decision Making</h3>"
+                  initialContent="<h3 class='font-semibold mb-1'>Strength Title</h3>"
                   className="!block text-white"
                 />
                 <EditableSection
-                  initialContent="<p>Adaptive decision-making skills in high-pressure environments</p>"
+                  initialContent="<p>Strength description</p>"
                   className="!block text-white"
                 />
               </div>
@@ -119,7 +119,7 @@ export function ModernTealTemplate() {
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4 border-b border-teal-500 pb-2">SKILLS</h2>
           <EditableSection
-            initialContent="<p>Agile • Docker • IBM • IELTS • Kaizen • PMO • Python • RFP • Scrum • Gmail</p>"
+            initialContent="<p>Your • Skills • Here</p>"
             className="!block text-white"
           />
         </section>
@@ -129,21 +129,21 @@ export function ModernTealTemplate() {
           <div className="space-y-4">
             <div>
               <EditableSection
-                initialContent="<h3 class='font-semibold mb-1'>Technology Enthusiast</h3>"
+                initialContent="<h3 class='font-semibold mb-1'>Interest Title</h3>"
                 className="!block text-white"
               />
               <EditableSection
-                initialContent="<p>Passionate about technology and its integration to enhance business processes</p>"
+                initialContent="<p>Interest description</p>"
                 className="!block text-white"
               />
             </div>
             <div>
               <EditableSection
-                initialContent="<h3 class='font-semibold mb-1'>Travel Enthusiast</h3>"
+                initialContent="<h3 class='font-semibold mb-1'>Interest Title</h3>"
                 className="!block text-white"
               />
               <EditableSection
-                initialContent="<p>Has a keen interest in travel and exploring new cultures</p>"
+                initialContent="<p>Interest description</p>"
                 className="!block text-white"
               />
             </div>
@@ -173,7 +173,7 @@ export function ModernTealTemplate() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">SUMMARY</h2>
               <EditableSection
-                initialContent="<p class='text-gray-700'>I am a transformational leader with over 20 years of experience in driving significant business outcomes through strategic initiatives and operational excellence. My expertise lies in process optimization, product innovation, and leveraging AI to enhance efficiency and profitability.</p>"
+                initialContent="<p class='text-gray-700'>Write your professional summary here...</p>"
                 className="!block"
               />
             </section>
@@ -185,31 +185,31 @@ export function ModernTealTemplate() {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <EditableSection
-                        initialContent="<h3 class='text-lg font-semibold text-gray-800'>IW Program Lead - Order Management/Billing & Invoicing</h3>"
+                        initialContent="<h3 class='text-lg font-semibold text-gray-800'>Job Title</h3>"
                         className="!block"
                       />
                       <EditableSection
-                        initialContent="<p class='text-teal-600'>IBM</p>"
+                        initialContent="<p class='text-teal-600'>Company Name</p>"
                         className="!block"
                       />
                     </div>
                     <div className="text-right">
                       <EditableSection
-                        initialContent="<p class='text-gray-600'>01/2022 - Present</p>"
+                        initialContent="<p class='text-gray-600'>Date Range</p>"
                         className="!block"
                       />
                       <EditableSection
-                        initialContent="<p class='text-gray-600'>Bangalore, India</p>"
+                        initialContent="<p class='text-gray-600'>Location</p>"
                         className="!block"
                       />
                     </div>
                   </div>
                   <EditableSection
                     initialContent={`<ul class="list-disc list-inside space-y-2 text-gray-700">
-                      <li>Leading program management in order management, billing, and invoicing for EMEA</li>
-                      <li>Led development and global deployment of intelligent workflow applications across 117 EMEA countries</li>
-                      <li>Orchestrated the deployment of Order Management applications processing over $1 billion in transactions</li>
-                      <li>Achieved a 35% reduction in cycle time for registration teams</li>
+                      <li>Key achievement or responsibility</li>
+                      <li>Key achievement or responsibility</li>
+                      <li>Key achievement or responsibility</li>
+                      <li>Key achievement or responsibility</li>
                     </ul>`}
                     className="!block"
                   />

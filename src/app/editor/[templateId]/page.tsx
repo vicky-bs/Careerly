@@ -255,8 +255,39 @@ export default function EditorPage() {
 
         <div className="max-w-[210mm] mx-auto" style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
           <div className="space-y-16">
-            {pages.map((pageNumber) => (
-              <div key={pageNumber} className="relative">
+            {/* First Page */}
+            <div className="relative">
+              <div className="bg-white rounded-sm relative transform transition-all duration-300 hover:translate-y-[-4px]">
+                {/* Paper effect layers */}
+                <div className="absolute inset-0 rounded-sm bg-gradient-to-br from-gray-50 to-white"></div>
+                <div className="absolute inset-0 rounded-sm shadow-[0_10px_30px_rgba(0,0,0,0.15)]"></div>
+                <div className="absolute inset-0 rounded-sm shadow-[2px_4px_16px_rgba(0,0,0,0.12)]"></div>
+                <div className="absolute inset-0 rounded-sm shadow-[0_2px_12px_rgba(0,0,0,0.08)]"></div>
+                
+                {/* A4 Content */}
+                <div className="w-[210mm] min-h-[297mm] relative bg-white rounded-sm z-10">
+                  {renderTemplate()}
+                </div>
+
+                {/* Enhanced Paper stack effect */}
+                <div className="absolute -bottom-1 -right-1 left-1 h-[297mm] bg-white rounded-sm -z-10 opacity-50 shadow-md"></div>
+                <div className="absolute -bottom-2 -right-2 left-2 h-[297mm] bg-white rounded-sm -z-20 opacity-30 shadow-lg"></div>
+                <div className="absolute -bottom-3 -right-3 left-3 h-[297mm] bg-white rounded-sm -z-30 opacity-20 shadow-xl"></div>
+              </div>
+
+              {/* Page Number */}
+              <div className="absolute -bottom-10 left-0 right-0 text-center">
+                <div className="inline-flex items-center justify-center">
+                  <div className="h-[1px] w-12 bg-gray-300"></div>
+                  <span className="mx-4 text-sm text-gray-500 font-medium">Page 1</span>
+                  <div className="h-[1px] w-12 bg-gray-300"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional pages will be rendered here when content overflows */}
+            {contentHeight > A4_HEIGHT_PX && (
+              <div className="relative">
                 <div className="bg-white rounded-sm relative transform transition-all duration-300 hover:translate-y-[-4px]">
                   {/* Paper effect layers */}
                   <div className="absolute inset-0 rounded-sm bg-gradient-to-br from-gray-50 to-white"></div>
@@ -265,10 +296,7 @@ export default function EditorPage() {
                   <div className="absolute inset-0 rounded-sm shadow-[0_2px_12px_rgba(0,0,0,0.08)]"></div>
                   
                   {/* A4 Content */}
-                  <div 
-                    ref={pageNumber === 1 ? contentRef : undefined}
-                    className="w-[210mm] min-h-[297mm] relative bg-white rounded-sm z-10"
-                  >
+                  <div className="w-[210mm] min-h-[297mm] relative bg-white rounded-sm z-10">
                     {renderTemplate()}
                   </div>
 
@@ -282,12 +310,12 @@ export default function EditorPage() {
                 <div className="absolute -bottom-10 left-0 right-0 text-center">
                   <div className="inline-flex items-center justify-center">
                     <div className="h-[1px] w-12 bg-gray-300"></div>
-                    <span className="mx-4 text-sm text-gray-500 font-medium">Page {pageNumber}</span>
+                    <span className="mx-4 text-sm text-gray-500 font-medium">Page 2</span>
                     <div className="h-[1px] w-12 bg-gray-300"></div>
                   </div>
                 </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </main>
