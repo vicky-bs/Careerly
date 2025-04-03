@@ -54,7 +54,9 @@ export default function EditorPage() {
   const [scale, setScale] = useState(1)
   const [activeItem, setActiveItem] = useState<number | null>(null)
   const [pages, setPages] = useState<number[]>([1])
+  const [contentHeight, setContentHeight] = useState(0)
   const contentRef = useRef<HTMLDivElement>(null)
+  const A4_HEIGHT_PX = 297 * 3.7795275591 // A4 height in pixels
 
   // Get theme colors based on template
   const theme = themeColors[templateId as keyof typeof themeColors] || themeColors.default
@@ -63,13 +65,12 @@ export default function EditorPage() {
     const checkOverflow = () => {
       if (contentRef.current) {
         const content = contentRef.current
-        const isOverflowing = content.scrollHeight > content.clientHeight
+        const currentContentHeight = content.scrollHeight
+        setContentHeight(currentContentHeight)
         
-        if (isOverflowing) {
+        if (currentContentHeight > A4_HEIGHT_PX) {
           // Calculate how many pages we need based on content height
-          const contentHeight = content.scrollHeight
-          const pageHeight = 297 * 3.7795275591 // Convert mm to px (1mm = 3.7795275591px)
-          const numberOfPages = Math.ceil(contentHeight / pageHeight)
+          const numberOfPages = Math.ceil(currentContentHeight / A4_HEIGHT_PX)
           
           // Update pages array if needed
           if (numberOfPages !== pages.length) {
@@ -94,7 +95,7 @@ export default function EditorPage() {
     return () => {
       resizeObserver.disconnect()
     }
-  }, [contentRef.current])
+  }, [contentRef.current, pages.length])
 
   const handleZoomIn = () => {
     setScale(prev => Math.min(prev + 0.1, 1.5))
@@ -109,7 +110,7 @@ export default function EditorPage() {
     switch (label) {
       case 'Templates':
         console.log('Navigating to templates page...')
-        window.location.href = '/templates'
+        router.push('/templates')
         break
       case 'Add section':
         // Handle add section
@@ -265,7 +266,7 @@ export default function EditorPage() {
                 <div className="absolute inset-0 rounded-sm shadow-[0_2px_12px_rgba(0,0,0,0.08)]"></div>
                 
                 {/* A4 Content */}
-                <div className="w-[210mm] min-h-[297mm] relative bg-white rounded-sm z-10">
+                <div ref={contentRef} className="w-[210mm] min-h-[297mm] relative bg-white rounded-sm z-10">
                   {renderTemplate()}
                 </div>
 
@@ -285,9 +286,9 @@ export default function EditorPage() {
               </div>
             </div>
 
-            {/* Additional pages will be rendered here when content overflows */}
-            {contentHeight > A4_HEIGHT_PX && (
-              <div className="relative">
+            {/* Additional pages */}
+            {pages.slice(1).map((pageNum) => (
+              <div key={pageNum} className="relative">
                 <div className="bg-white rounded-sm relative transform transition-all duration-300 hover:translate-y-[-4px]">
                   {/* Paper effect layers */}
                   <div className="absolute inset-0 rounded-sm bg-gradient-to-br from-gray-50 to-white"></div>
@@ -297,7 +298,7 @@ export default function EditorPage() {
                   
                   {/* A4 Content */}
                   <div className="w-[210mm] min-h-[297mm] relative bg-white rounded-sm z-10">
-                    {renderTemplate()}
+                    {renderOverflowContent()}
                   </div>
 
                   {/* Enhanced Paper stack effect */}
@@ -310,12 +311,12 @@ export default function EditorPage() {
                 <div className="absolute -bottom-10 left-0 right-0 text-center">
                   <div className="inline-flex items-center justify-center">
                     <div className="h-[1px] w-12 bg-gray-300"></div>
-                    <span className="mx-4 text-sm text-gray-500 font-medium">Page 2</span>
+                    <span className="mx-4 text-sm text-gray-500 font-medium">Page {pageNum}</span>
                     <div className="h-[1px] w-12 bg-gray-300"></div>
                   </div>
                 </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </main>
