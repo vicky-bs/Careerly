@@ -1,9 +1,10 @@
 'use client'
 
 import { ModernTealTemplate } from '@/components/templates/ModernTealTemplate'
-import { useParams } from 'next/navigation'
+import { ModernNavyTemplate } from '@/components/templates/ModernNavyTemplate'
+import { useParams, useRouter } from 'next/navigation'
 import { PlusIcon, ArrowsUpDownIcon, SwatchIcon, PaintBrushIcon, SparklesIcon, DocumentCheckIcon, ClockIcon, ShareIcon, TagIcon, MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon } from '@heroicons/react/24/outline'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 // Theme configurations for different templates
 const themeColors = {
@@ -17,6 +18,18 @@ const themeColors = {
       badge: 'bg-teal-100',
       badgeText: 'text-teal-700',
       gradient: 'from-teal-50 to-emerald-50'
+    }
+  },
+  'modern-navy': {
+    primary: 'navy',
+    colors: {
+      bg: 'bg-[#E5EAF2]',
+      text: 'text-[#0A2647]',
+      hover: 'hover:bg-[#E5EAF2]',
+      icon: 'text-[#0A2647]',
+      badge: 'bg-[#E5EAF2]',
+      badgeText: 'text-[#0A2647]',
+      gradient: 'from-[#E5EAF2] to-[#F0F4F8]'
     }
   },
   // Add more template themes here as needed
@@ -36,12 +49,52 @@ const themeColors = {
 
 export default function EditorPage() {
   const params = useParams()
+  const router = useRouter()
   const templateId = params.templateId as string
   const [scale, setScale] = useState(1)
   const [activeItem, setActiveItem] = useState<number | null>(null)
+  const [pages, setPages] = useState<number[]>([1])
+  const contentRef = useRef<HTMLDivElement>(null)
 
   // Get theme colors based on template
   const theme = themeColors[templateId as keyof typeof themeColors] || themeColors.default
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (contentRef.current) {
+        const content = contentRef.current
+        const isOverflowing = content.scrollHeight > content.clientHeight
+        
+        if (isOverflowing) {
+          // Calculate how many pages we need based on content height
+          const contentHeight = content.scrollHeight
+          const pageHeight = 297 * 3.7795275591 // Convert mm to px (1mm = 3.7795275591px)
+          const numberOfPages = Math.ceil(contentHeight / pageHeight)
+          
+          // Update pages array if needed
+          if (numberOfPages !== pages.length) {
+            setPages(Array.from({ length: numberOfPages }, (_, i) => i + 1))
+          }
+        } else if (pages.length > 1) {
+          // If content fits in one page but we have multiple pages, reset to one
+          setPages([1])
+        }
+      }
+    }
+
+    // Check overflow on initial render and when content changes
+    checkOverflow()
+
+    // Add resize observer to check overflow when window is resized
+    const resizeObserver = new ResizeObserver(checkOverflow)
+    if (contentRef.current) {
+      resizeObserver.observe(contentRef.current)
+    }
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [contentRef.current])
 
   const handleZoomIn = () => {
     setScale(prev => Math.min(prev + 0.1, 1.5))
@@ -49,6 +102,48 @@ export default function EditorPage() {
 
   const handleZoomOut = () => {
     setScale(prev => Math.max(prev - 0.1, 0.5))
+  }
+
+  const handleButtonClick = (label: string) => {
+    console.log('Button clicked:', label)
+    switch (label) {
+      case 'Templates':
+        console.log('Navigating to templates page...')
+        window.location.href = '/templates'
+        break
+      case 'Add section':
+        // Handle add section
+        break
+      case 'Rearrange':
+        // Handle rearrange
+        break
+      case 'Design & Font':
+        // Handle design & font
+        break
+      case 'Improve it':
+        // Handle improve it
+        break
+      case 'Check':
+        // Handle check
+        break
+      case 'AI Assistant':
+        // Handle AI assistant
+        break
+      case 'Download':
+        // Handle download
+        break
+      case 'Share':
+        // Handle share
+        break
+      case 'History':
+        // Handle history
+        break
+      case 'Branding':
+        // Handle branding
+        break
+      default:
+        break
+    }
   }
 
   const sidebarItems = [
@@ -69,16 +164,23 @@ export default function EditorPage() {
     switch (templateId) {
       case 'modern-teal':
         return <ModernTealTemplate />
+      case 'modern-navy':
+        return <ModernNavyTemplate />
       default:
         return <div>Template not found</div>
     }
+  }
+
+  const renderOverflowContent = () => {
+    // Implement the logic to render overflow content
+    return <div>Overflow content rendering logic not implemented</div>
   }
 
   return (
     <div className="flex h-screen bg-[#f0f2f5]">
       {/* Left Sidebar - Floating */}
       <div className="fixed left-8 top-1/2 -translate-y-1/2 z-50">
-        <div className="bg-white/95 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-4 backdrop-blur-sm backdrop-filter">
+        <div className="bg-white/95 rounded-2xl shadow-[rgba(17,_17,_26,_0.1)_0px_4px_16px,_rgba(17,_17,_26,_0.05)_0px_8px_32px] p-4 backdrop-blur-sm backdrop-filter hover:shadow-[rgba(17,_17,_26,_0.1)_0px_4px_20px,_rgba(17,_17,_26,_0.1)_0px_8px_38px] transition-shadow duration-300">
           <div className="space-y-1">
             {sidebarItems.map((item, index) => (
               <div
@@ -88,39 +190,39 @@ export default function EditorPage() {
                 onMouseLeave={() => setActiveItem(null)}
               >
                 <button
-                  className={`flex items-center w-full p-2.5 text-sm rounded-xl transition-all duration-200 ${
+                  type="button"
+                  onClick={() => handleButtonClick(item.label)}
+                  className={`relative z-10 flex items-center w-full p-2.5 text-sm rounded-xl transition-all duration-200 ${
                     activeItem === index
-                      ? `${theme.colors.bg} ${theme.colors.text}`
-                      : `text-gray-700 hover:bg-gray-50/80`
+                      ? `${theme.colors.bg} text-black font-medium border-2 ${theme.colors.text} border-opacity-20`
+                      : `text-black hover:bg-gray-50/80 border border-opacity-20 ${theme.colors.text}`
                   }`}
                 >
-                  <item.icon className={`w-5 h-5 ${
-                    activeItem === index ? theme.colors.icon : 'text-gray-600'
-                  }`} />
-                  <span className={`ml-3 font-medium min-w-[120px] transition-all duration-200 ${
-                    activeItem === index 
-                      ? 'opacity-100 translate-x-0' 
-                      : 'opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0'
-                  }`}>
+                  <div className="flex-shrink-0 w-5 flex items-center justify-center">
+                    <item.icon className={`w-4.5 h-4.5 ${
+                      activeItem === index ? theme.colors.icon : 'text-gray-800'
+                    }`} />
+                  </div>
+                  <span className="ml-3 text-left font-medium">
                     {item.label}
                   </span>
                   {item.badge && (
-                    <span className={`ml-auto px-2 py-0.5 rounded-full text-xs ${
+                    <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${
                       activeItem === index
-                        ? `${theme.colors.badge} ${theme.colors.badgeText}`
-                        : 'bg-gray-100 text-gray-700'
+                        ? `${theme.colors.badge} text-black`
+                        : 'bg-gray-100 text-black'
                     }`}>
                       {item.badge}
                     </span>
                   )}
                 </button>
-                {/* Hover card effect */}
-                <div className={`absolute left-0 right-0 -inset-1 rounded-xl transition-all duration-200 ${
+                {/* Button background highlight */}
+                <div className={`absolute left-0 right-0 top-0 bottom-0 -inset-1 rounded-xl transition-all duration-200 ${
                   activeItem === index
                     ? 'opacity-100'
-                    : 'opacity-0'
+                    : 'opacity-0 group-hover:opacity-100'
                 }`}>
-                  <div className={`absolute inset-0 rounded-xl bg-gradient-to-r ${theme.colors.gradient} opacity-50 blur`}></div>
+                  <div className={`absolute inset-0 rounded-xl bg-gradient-to-r ${theme.colors.gradient} opacity-40 blur`}></div>
                 </div>
               </div>
             ))}
@@ -152,27 +254,41 @@ export default function EditorPage() {
         </div>
 
         <div className="max-w-[210mm] mx-auto" style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}>
-          {/* A4 Page Container */}
-          <div className="bg-white rounded-sm relative transform transition-transform duration-200 hover:translate-y-[-2px]">
-            {/* Paper effect layers */}
-            <div className="absolute inset-0 rounded-sm bg-gradient-to-br from-gray-50 to-white"></div>
-            <div className="absolute inset-0 rounded-sm shadow-[0_0_10px_rgba(0,0,0,0.1)]"></div>
-            <div className="absolute inset-0 rounded-sm shadow-[2px_4px_12px_rgba(0,0,0,0.08)]"></div>
-            <div className="absolute inset-0 rounded-sm shadow-[0_2px_8px_rgba(0,0,0,0.06)]"></div>
-            {/* Subtle edge highlight */}
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-60"></div>
-            
-            {/* A4 Content */}
-            <div className="w-[210mm] min-h-[297mm] relative bg-white rounded-sm z-10 shadow-[0_0_0_1px_rgba(0,0,0,0.05)]">
-              {renderTemplate()}
-            </div>
+          <div className="space-y-16">
+            {pages.map((pageNumber) => (
+              <div key={pageNumber} className="relative">
+                <div className="bg-white rounded-sm relative transform transition-all duration-300 hover:translate-y-[-4px]">
+                  {/* Paper effect layers */}
+                  <div className="absolute inset-0 rounded-sm bg-gradient-to-br from-gray-50 to-white"></div>
+                  <div className="absolute inset-0 rounded-sm shadow-[0_10px_30px_rgba(0,0,0,0.15)]"></div>
+                  <div className="absolute inset-0 rounded-sm shadow-[2px_4px_16px_rgba(0,0,0,0.12)]"></div>
+                  <div className="absolute inset-0 rounded-sm shadow-[0_2px_12px_rgba(0,0,0,0.08)]"></div>
+                  
+                  {/* A4 Content */}
+                  <div 
+                    ref={pageNumber === 1 ? contentRef : undefined}
+                    className="w-[210mm] min-h-[297mm] relative bg-white rounded-sm z-10"
+                  >
+                    {renderTemplate()}
+                  </div>
 
-            {/* Paper stack effect */}
-            <div className="absolute -bottom-1 -right-1 left-1 h-[297mm] bg-white rounded-sm -z-10 opacity-40 shadow-sm"></div>
-            <div className="absolute -bottom-2 -right-2 left-2 h-[297mm] bg-white rounded-sm -z-20 opacity-20 shadow-sm"></div>
+                  {/* Enhanced Paper stack effect */}
+                  <div className="absolute -bottom-1 -right-1 left-1 h-[297mm] bg-white rounded-sm -z-10 opacity-50 shadow-md"></div>
+                  <div className="absolute -bottom-2 -right-2 left-2 h-[297mm] bg-white rounded-sm -z-20 opacity-30 shadow-lg"></div>
+                  <div className="absolute -bottom-3 -right-3 left-3 h-[297mm] bg-white rounded-sm -z-30 opacity-20 shadow-xl"></div>
+                </div>
+
+                {/* Page Number */}
+                <div className="absolute -bottom-10 left-0 right-0 text-center">
+                  <div className="inline-flex items-center justify-center">
+                    <div className="h-[1px] w-12 bg-gray-300"></div>
+                    <span className="mx-4 text-sm text-gray-500 font-medium">Page {pageNumber}</span>
+                    <div className="h-[1px] w-12 bg-gray-300"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          {/* Page gap with enhanced shadow */}
-          <div className="h-16"></div>
         </div>
       </main>
     </div>
