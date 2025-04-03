@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* A4 Page Styling */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+/* Custom scrollbar for better visual feedback */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+  border: 2px solid #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Paper texture effect */
+.paper-texture {
+  background-image: 
+    linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Enhanced paper effects */
+.paper-shadow {
+  box-shadow: 
+    0 1px 1px rgba(0,0,0,0.05),
+    0 2px 2px rgba(0,0,0,0.05),
+    0 4px 4px rgba(0,0,0,0.05),
+    0 8px 8px rgba(0,0,0,0.05),
+    0 16px 16px rgba(0,0,0,0.05);
+}
+
+.paper-edge {
+  position: relative;
+}
+
+.paper-edge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255,255,255,0.8) 15%, 
+    rgba(255,255,255,0.8) 85%, 
+    transparent 100%
+  );
+}
+
+/* Hover effect for paper */
+.paper-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.paper-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 1px 1px rgba(0,0,0,0.06),
+    0 2px 2px rgba(0,0,0,0.06),
+    0 4px 4px rgba(0,0,0,0.06),
+    0 8px 8px rgba(0,0,0,0.06),
+    0 16px 16px rgba(0,0,0,0.06);
+}
+
+/* Prevent page break inside elements */
+.page-break-inside-avoid {
+  page-break-inside: avoid;
+}
+
+/* A4 dimensions and styling */
+.a4-page {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 0;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Page gap styling */
+.page-gap {
+  height: 2rem;
+  background: #f0f2f5;
+}
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
+} 
