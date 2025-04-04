@@ -1,12 +1,12 @@
 'use client'
 
-import { ModernTealTemplate } from '@/components/templates/ModernTealTemplate'
-import { ModernNavyTemplate } from '@/components/templates/ModernNavyTemplate'
+import ModernTealTemplate from '@/components/templates/ModernTealTemplate'
+import ModernNavyTemplate from '@/components/templates/ModernNavyTemplate'
 import { useParams, useRouter } from 'next/navigation'
 import { PlusIcon, ArrowsUpDownIcon, SwatchIcon, PaintBrushIcon, SparklesIcon, DocumentCheckIcon, ClockIcon, ShareIcon, TagIcon, MagnifyingGlassMinusIcon, MagnifyingGlassPlusIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect, useRef } from 'react'
 import { AddSectionDialog } from '@/components/editor/AddSectionDialog'
-import { SectionForm } from '@/components/editor/SectionForm'
+import SectionForm from '@/components/editor/SectionForm'
 
 // Theme configurations for different templates
 const themeColors = {
@@ -62,6 +62,7 @@ export default function EditorPage() {
   const [showAddSectionDialog, setShowAddSectionDialog] = useState(false)
   const [showSectionForm, setShowSectionForm] = useState(false)
   const [selectedSectionType, setSelectedSectionType] = useState('')
+  const [hasOverflow, setHasOverflow] = useState(false)
 
   // Get theme colors based on template
   const theme = themeColors[templateId as keyof typeof themeColors] || themeColors.default
@@ -71,9 +72,14 @@ export default function EditorPage() {
       if (contentRef.current) {
         const content = contentRef.current
         const currentContentHeight = content.scrollHeight
+        const currentClientHeight = content.clientHeight
         setContentHeight(currentContentHeight)
         
-        if (currentContentHeight > A4_HEIGHT_PX) {
+        // Check if content actually overflows
+        const doesOverflow = currentContentHeight > A4_HEIGHT_PX
+        setHasOverflow(doesOverflow)
+        
+        if (doesOverflow) {
           // Calculate how many pages we need based on content height
           const numberOfPages = Math.ceil(currentContentHeight / A4_HEIGHT_PX)
           
@@ -81,8 +87,8 @@ export default function EditorPage() {
           if (numberOfPages !== pages.length) {
             setPages(Array.from({ length: numberOfPages }, (_, i) => i + 1))
           }
-        } else if (pages.length > 1) {
-          // If content fits in one page but we have multiple pages, reset to one
+        } else {
+          // If no overflow, only show first page
           setPages([1])
         }
       }
@@ -295,20 +301,20 @@ export default function EditorPage() {
                   <div className="absolute -bottom-2 -right-2 left-2 h-[297mm] bg-white rounded-sm -z-20 opacity-30 shadow-lg"></div>
                   <div className="absolute -bottom-3 -right-3 left-3 h-[297mm] bg-white rounded-sm -z-30 opacity-20 shadow-xl"></div>
                 </div>
-
+                
                 {/* Page Number */}
                 <div className="absolute -bottom-10 left-0 right-0 text-center">
                   <div className="inline-flex items-center justify-center">
                     <div className="h-[1px] w-12 bg-gray-300"></div>
-                    <span className="mx-4 text-sm text-gray-500 font-medium">Page 1</span>
+                    <span className="mx-4 text-sm text-gray-500 font-medium">Page 1{pages.length > 1 ? ` of ${pages.length}` : ''}</span>
                     <div className="h-[1px] w-12 bg-gray-300"></div>
                   </div>
                 </div>
               </div>
 
               {/* Additional pages */}
-              {pages.slice(1).map((pageNum) => (
-                <div key={pageNum} className="relative">
+              {pages.length > 1 && (
+                <div className="relative">
                   <div className="bg-white rounded-sm relative transform transition-all duration-300 hover:translate-y-[-4px]">
                     {/* Paper effect layers */}
                     <div className="absolute inset-0 rounded-sm bg-gradient-to-br from-gray-50 to-white"></div>
@@ -318,7 +324,7 @@ export default function EditorPage() {
                     
                     {/* A4 Content */}
                     <div className="w-[210mm] min-h-[297mm] relative bg-white rounded-sm z-10">
-                      {renderOverflowContent()}
+                      {/* Empty page 2 - will be populated by overflow content */}
                     </div>
 
                     {/* Enhanced Paper stack effect */}
@@ -331,16 +337,18 @@ export default function EditorPage() {
                   <div className="absolute -bottom-10 left-0 right-0 text-center">
                     <div className="inline-flex items-center justify-center">
                       <div className="h-[1px] w-12 bg-gray-300"></div>
-                      <span className="mx-4 text-sm text-gray-500 font-medium">Page {pageNum}</span>
+                      <span className="mx-4 text-sm text-gray-500 font-medium">Page 2 of {pages.length}</span>
                       <div className="h-[1px] w-12 bg-gray-300"></div>
                     </div>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </main>
       </div>
+
+      {/* Dialogs */}
       <AddSectionDialog
         isOpen={showAddSectionDialog}
         onClose={() => setShowAddSectionDialog(false)}

@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://vikrambs:changeme@db:5432/careerly
+      - NODE_ENV=production
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  # Using external PostgreSQL, so we don't need the db service
+  # Comment out or remove the db service configuration
+
+volumes:
+  postgres_data: 
