@@ -23,19 +23,19 @@ export default function TemplatesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900">Choose Your Resume Template</h1>
           <p className="mt-4 text-lg text-gray-600">Select a professional template to get started</p>
         </div>
 
-        <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-2">
+        <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {templates.map((template) => (
             <div
               key={template.id}
-              className="group relative bg-white rounded-2xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl"
+              className="group relative bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-200"
             >
-              <div className="aspect-[210/297] relative overflow-hidden bg-gray-100">
+              <div className="aspect-[210/297] relative w-full max-w-[240px] mx-auto overflow-hidden">
                 <Image
                   src={template.image}
                   alt={template.name}
@@ -44,15 +44,15 @@ export default function TemplatesPage() {
                   priority
                 />
               </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-900">{template.name}</h3>
-                <p className="mt-2 text-gray-600">{template.description}</p>
+              <div className="p-4 border-t border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900">{template.name}</h3>
+                <p className="mt-1 text-sm text-gray-500 line-clamp-2">{template.description}</p>
                 <button
                   onClick={() => {
                     console.log('Template selected:', template.id)
                     router.push(`/editor/${template.id}`)
                   }}
-                  className={`mt-4 w-full inline-flex justify-center items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white transition-all duration-200 ${
+                  className={`mt-4 w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white transition-all duration-200 ${
                     template.id === 'modern-navy'
                       ? 'bg-[#0A2647] hover:bg-[#0A3157]'
                       : 'bg-teal-600 hover:bg-teal-700'
