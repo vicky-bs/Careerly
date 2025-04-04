@@ -18,16 +18,73 @@ interface SectionFormProps {
   onSave: (data: any) => void
 }
 
+// Define field configurations for different section types
+const sectionFields = {
+  experience: [
+    { name: 'jobTitle', label: 'Job Title', type: 'text', required: true },
+    { name: 'company', label: 'Company', type: 'text', required: true },
+    { name: 'location', label: 'Location', type: 'text', required: true },
+    { name: 'startDate', label: 'Start Date', type: 'date', required: true },
+    { name: 'endDate', label: 'End Date', type: 'date', required: false },
+    { name: 'description', label: 'Description', type: 'editor', required: true }
+  ],
+  projects: [
+    { name: 'projectName', label: 'Project Name', type: 'text', required: true },
+    { name: 'role', label: 'Your Role', type: 'text', required: true },
+    { name: 'startDate', label: 'Start Date', type: 'date', required: true },
+    { name: 'endDate', label: 'End Date', type: 'date', required: false },
+    { name: 'technologies', label: 'Technologies Used', type: 'text', required: true, placeholder: 'e.g. React, Node.js, AWS' },
+    { name: 'description', label: 'Project Description', type: 'editor', required: true }
+  ],
+  education: [
+    { name: 'degree', label: 'Degree', type: 'text', required: true },
+    { name: 'institution', label: 'Institution', type: 'text', required: true },
+    { name: 'location', label: 'Location', type: 'text', required: true },
+    { name: 'graduationDate', label: 'Graduation Date', type: 'date', required: true },
+    { name: 'gpa', label: 'GPA', type: 'text', required: false },
+    { name: 'description', label: 'Additional Information', type: 'editor', required: false }
+  ],
+  skills: [
+    { name: 'category', label: 'Category', type: 'text', required: true, placeholder: 'e.g. Programming Languages, Tools, Soft Skills' },
+    { name: 'skills', label: 'Skills', type: 'text', required: true, placeholder: 'Comma separated list of skills' }
+  ],
+  certifications: [
+    { name: 'name', label: 'Certification Name', type: 'text', required: true },
+    { name: 'issuer', label: 'Issuing Organization', type: 'text', required: true },
+    { name: 'issueDate', label: 'Issue Date', type: 'date', required: true },
+    { name: 'expiryDate', label: 'Expiry Date', type: 'date', required: false },
+    { name: 'credentialId', label: 'Credential ID', type: 'text', required: false },
+    { name: 'description', label: 'Description', type: 'editor', required: false }
+  ],
+  achievements: [
+    { name: 'title', label: 'Achievement Title', type: 'text', required: true },
+    { name: 'date', label: 'Date', type: 'date', required: true },
+    { name: 'description', label: 'Description', type: 'editor', required: true }
+  ],
+  languages: [
+    { name: 'language', label: 'Language', type: 'text', required: true },
+    { name: 'proficiency', label: 'Proficiency Level', type: 'select', required: true, 
+      options: ['Native', 'Fluent', 'Professional', 'Intermediate', 'Basic'] }
+  ],
+  interests: [
+    { name: 'interests', label: 'Interests', type: 'text', required: true, placeholder: 'Comma separated list of interests' },
+    { name: 'description', label: 'Description', type: 'editor', required: false }
+  ]
+}
+
 export default function SectionForm({ isOpen, onClose, sectionType, onSave }: SectionFormProps) {
   const [isMounted, setIsMounted] = useState(false)
-  const [formData, setFormData] = useState({
-    jobTitle: '',
-    company: '',
-    location: '',
-    startDate: '',
-    endDate: '',
-    description: ''
-  })
+  const [formData, setFormData] = useState<Record<string, any>>({})
+
+  // Initialize form data based on section type
+  useEffect(() => {
+    const fields = sectionFields[sectionType as keyof typeof sectionFields] || []
+    const initialData = fields.reduce((acc, field) => {
+      acc[field.name] = ''
+      return acc
+    }, {} as Record<string, any>)
+    setFormData(initialData)
+  }, [sectionType])
 
   const editor = useEditor({
     extensions: [
@@ -40,7 +97,7 @@ export default function SectionForm({ isOpen, onClose, sectionType, onSave }: Se
       Highlight,
       FontFamily,
     ],
-    content: formData.description,
+    content: '',
     onUpdate: ({ editor }) => {
       setFormData(prev => ({
         ...prev,
@@ -49,17 +106,16 @@ export default function SectionForm({ isOpen, onClose, sectionType, onSave }: Se
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none',
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none min-h-[100px]',
       },
-    },
-    immediatelyRender: false
+    }
   })
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
@@ -69,30 +125,8 @@ export default function SectionForm({ isOpen, onClose, sectionType, onSave }: Se
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    try {
-      const response = await fetch('/api/sections', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          resumeId: '1', // TODO: Replace with actual resume ID from context/props
-          type: sectionType,
-          ...formData,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save section')
-      }
-
-      const savedSection = await response.json()
-      onSave(savedSection)
-      onClose()
-    } catch (error) {
-      console.error('Error saving section:', error)
-      // TODO: Add error handling UI
-    }
+    onSave(formData)
+    onClose()
   }
 
   const MenuBar = useCallback(() => {
@@ -101,22 +135,18 @@ export default function SectionForm({ isOpen, onClose, sectionType, onSave }: Se
     return (
       <div className="flex flex-wrap gap-2 p-2 border-b border-gray-200">
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
           className={`px-2 py-1 rounded ${editor.isActive('bold') ? 'bg-gray-200' : ''}`}
         >
           B
         </button>
         <button
+          type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
           className={`px-2 py-1 rounded ${editor.isActive('italic') ? 'bg-gray-200' : ''}`}
         >
           I
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={`px-2 py-1 rounded ${editor.isActive('underline') ? 'bg-gray-200' : ''}`}
-        >
-          U
         </button>
         <select
           onChange={(e) => editor.chain().focus().setFontFamily(e.target.value).run()}
@@ -128,18 +158,21 @@ export default function SectionForm({ isOpen, onClose, sectionType, onSave }: Se
         </select>
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
             className={`px-2 py-1 rounded ${editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''}`}
           >
             Left
           </button>
           <button
+            type="button"
             onClick={() => editor.chain().focus().setTextAlign('center').run()}
             className={`px-2 py-1 rounded ${editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''}`}
           >
             Center
           </button>
           <button
+            type="button"
             onClick={() => editor.chain().focus().setTextAlign('right').run()}
             className={`px-2 py-1 rounded ${editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''}`}
           >
@@ -149,6 +182,62 @@ export default function SectionForm({ isOpen, onClose, sectionType, onSave }: Se
       </div>
     )
   }, [editor])
+
+  const renderField = (field: any) => {
+    switch (field.type) {
+      case 'text':
+        return (
+          <input
+            type="text"
+            name={field.name}
+            required={field.required}
+            value={formData[field.name] || ''}
+            onChange={handleInputChange}
+            placeholder={field.placeholder}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
+          />
+        )
+      case 'date':
+        return (
+          <input
+            type="date"
+            name={field.name}
+            required={field.required}
+            value={formData[field.name] || ''}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
+          />
+        )
+      case 'select':
+        return (
+          <select
+            name={field.name}
+            required={field.required}
+            value={formData[field.name] || ''}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
+          >
+            <option value="">Select {field.label}</option>
+            {field.options?.map((option: string) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        )
+      case 'editor':
+        return (
+          <div className="prose-editor mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500">
+            {isMounted && <MenuBar />}
+            {isMounted && <EditorContent editor={editor} className="p-4" />}
+          </div>
+        )
+      default:
+        return null
+    }
+  }
+
+  const fields = sectionFields[sectionType as keyof typeof sectionFields] || []
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -177,102 +266,41 @@ export default function SectionForm({ isOpen, onClose, sectionType, onSave }: Se
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white p-6 shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 mb-4">
-                  Add {sectionType}
-                </Dialog.Title>
+                <div className="flex justify-between items-center mb-4">
+                  <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                    Add {sectionType.charAt(0).toUpperCase() + sectionType.slice(1)}
+                  </Dialog.Title>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="text-gray-400 hover:text-gray-500"
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
+                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Job Title<span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="jobTitle"
-                      required
-                      value={formData.jobTitle}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Company<span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="company"
-                      required
-                      value={formData.company}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Location<span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="location"
-                      required
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
+                  {fields.map((field, index) => (
+                    <div key={index}>
                       <label className="block text-sm font-medium text-gray-700">
-                        Start Date<span className="text-red-500">*</span>
+                        {field.label}
+                        {field.required && <span className="text-red-500">*</span>}
                       </label>
-                      <input
-                        type="date"
-                        name="startDate"
-                        required
-                        value={formData.startDate}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
-                      />
+                      {renderField(field)}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        End Date
-                      </label>
-                      <input
-                        type="date"
-                        name="endDate"
-                        value={formData.endDate}
-                        onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500"
-                      />
-                    </div>
-                  </div>
+                  ))}
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description<span className="text-red-500">*</span>
-                    </label>
-                    <div className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500">
-                      {isMounted && <MenuBar />}
-                      {isMounted && <EditorContent editor={editor} className="prose max-w-none p-4" />}
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-3 mt-6">
+                  <div className="mt-6 flex justify-end gap-3">
                     <button
                       type="button"
                       onClick={onClose}
-                      className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="rounded-md border border-transparent bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                      className="px-4 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
                     >
                       Add Section
                     </button>
