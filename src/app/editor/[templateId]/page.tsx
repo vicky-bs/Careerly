@@ -22,8 +22,8 @@ const themeColors = {
       icon: 'text-teal-600',
       badge: 'bg-teal-100',
       badgeText: 'text-teal-700',
-      gradient: 'from-teal-50 to-emerald-50'
-    }
+      gradient: 'from-teal-50 to-emerald-50',
+    },
   },
   'modern-navy': {
     primary: 'navy',
@@ -34,8 +34,8 @@ const themeColors = {
       icon: 'text-[#0A2647]',
       badge: 'bg-[#E5EAF2]',
       badgeText: 'text-[#0A2647]',
-      gradient: 'from-[#E5EAF2] to-[#F0F4F8]'
-    }
+      gradient: 'from-[#E5EAF2] to-[#F0F4F8]',
+    },
   },
   // Add more template themes here as needed
   'default': {
@@ -47,10 +47,10 @@ const themeColors = {
       icon: 'text-blue-600',
       badge: 'bg-blue-100',
       badgeText: 'text-blue-700',
-      gradient: 'from-blue-50 to-indigo-50'
-    }
-  }
-}
+      gradient: 'from-blue-50 to-indigo-50',
+    },
+  },
+} as const
 
 const getTemplateLayout = (templateId: string) => {
   switch (templateId) {
@@ -61,6 +61,15 @@ const getTemplateLayout = (templateId: string) => {
     default:
       return { columns: 1, boundaries: [] } // Default layout
   }
+}
+
+interface Section {
+  id: string
+  title: string
+  type: string
+  column: number
+  page: number
+  isLocked?: boolean
 }
 
 export default function EditorPage() {
@@ -78,18 +87,18 @@ export default function EditorPage() {
   const [selectedSectionType, setSelectedSectionType] = useState('')
   const [hasOverflow, setHasOverflow] = useState(false)
   const [isRearrangeOpen, setIsRearrangeOpen] = useState(false)
-  const [sections, setSections] = useState([
+  const [sections, setSections] = useState<Section[]>([
     { id: 'header', title: 'Header', type: 'header', column: 2, page: 1, isLocked: true },
     { id: 'summary', title: 'Summary', type: 'summary', column: 2, page: 1 },
-    { id: 'education', title: 'Education', type: 'education', column: 2, page: 1 },
-    { id: 'languages', title: 'Languages', type: 'languages', column: 2, page: 1 },
-    { id: 'projects', title: 'Projects', type: 'projects', column: 2, page: 1 },
-    { id: 'experience', title: 'Experience', type: 'experience', column: 2, page: 1 },
+    { id: 'education', title: 'Education', column: 2, page: 1, type: 'education' },
+    { id: 'languages', title: 'Languages', column: 2, page: 1, type: 'languages' },
+    { id: 'projects', title: 'Projects', column: 2, page: 1, type: 'projects' },
+    { id: 'experience', title: 'Experience', column: 2, page: 1, type: 'experience' },
     { id: 'strengths', title: 'Strengths', type: 'strengths', column: 1, page: 1 },
     { id: 'achievements', title: 'Key Achievements', type: 'achievements', column: 1, page: 1 },
     { id: 'skills', title: 'Skills', type: 'skills', column: 1, page: 1 },
-    { id: 'interests', title: 'Interests', type: 'interests', column: 1, page: 1 },
-    { id: 'courses', title: 'Courses', type: 'courses', column: 1, page: 1 }
+    { id: 'interests', title: 'Interests', column: 1, page: 1, type: 'interests' },
+    { id: 'courses', title: 'Courses', column: 1, page: 1, type: 'courses' },
   ])
 
   // Get theme colors based on template
@@ -102,15 +111,15 @@ export default function EditorPage() {
         const currentContentHeight = content.scrollHeight
         const currentClientHeight = content.clientHeight
         setContentHeight(currentContentHeight)
-        
+
         // Check if content actually overflows
         const doesOverflow = currentContentHeight > A4_HEIGHT_PX
         setHasOverflow(doesOverflow)
-        
+
         if (doesOverflow) {
           // Calculate how many pages we need based on content height
           const numberOfPages = Math.ceil(currentContentHeight / A4_HEIGHT_PX)
-          
+
           // Update pages array if needed
           if (numberOfPages !== pages.length) {
             setPages(Array.from({ length: numberOfPages }, (_, i) => i + 1))
@@ -137,11 +146,11 @@ export default function EditorPage() {
   }, [contentRef.current, pages.length])
 
   const handleZoomIn = () => {
-    setScale(prev => Math.min(prev + 0.1, 1.5))
+    setScale((prev) => Math.min(prev + 0.1, 1.5))
   }
 
   const handleZoomOut = () => {
-    setScale(prev => Math.max(prev - 0.1, 0.5))
+    setScale((prev) => Math.max(prev - 0.1, 0.5))
   }
 
   const handleButtonClick = (label: string) => {
@@ -215,10 +224,10 @@ export default function EditorPage() {
     switch (templateId) {
       case 'modern-teal':
         console.log('Rendering ModernTealTemplate')
-        return <ModernTealTemplate />
+        return <ModernTealTemplate sections={sections} />
       case 'modern-navy':
         console.log('Rendering ModernNavyTemplate')
-        return <ModernNavyTemplate />
+        return <ModernNavyTemplate sections={sections} />
       default:
         console.log('Template not found:', templateId)
         return <div>Template not found</div>
