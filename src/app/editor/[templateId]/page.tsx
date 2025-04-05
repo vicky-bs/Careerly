@@ -7,6 +7,7 @@ import { PlusIcon, ArrowsUpDownIcon, SwatchIcon, PaintBrushIcon, SparklesIcon, D
 import { useState, useEffect, useRef } from 'react'
 import { AddSectionDialog } from '@/components/editor/AddSectionDialog'
 import SectionForm from '@/components/editor/SectionForm'
+import RearrangeSections from '@/components/editor/RearrangeSections'
 
 // Theme configurations for different templates
 const themeColors = {
@@ -63,6 +64,20 @@ export default function EditorPage() {
   const [showSectionForm, setShowSectionForm] = useState(false)
   const [selectedSectionType, setSelectedSectionType] = useState('')
   const [hasOverflow, setHasOverflow] = useState(false)
+  const [isRearrangeOpen, setIsRearrangeOpen] = useState(false)
+  const [sections, setSections] = useState([
+    { id: 'header', title: 'Header', type: 'header', column: 'left', page: 1, isLocked: true },
+    { id: 'summary', title: 'Summary', type: 'summary', column: 'left', page: 1 },
+    { id: 'education', title: 'Education', type: 'education', column: 'left', page: 1 },
+    { id: 'languages', title: 'Languages', type: 'languages', column: 'left', page: 1 },
+    { id: 'projects', title: 'Projects', type: 'projects', column: 'left', page: 1 },
+    { id: 'experience', title: 'Experience', type: 'experience', column: 'left', page: 1 },
+    { id: 'strengths', title: 'Strengths', type: 'strengths', column: 'right', page: 1 },
+    { id: 'achievements', title: 'Key Achievements', type: 'achievements', column: 'right', page: 1 },
+    { id: 'skills', title: 'Skills', type: 'skills', column: 'right', page: 1 },
+    { id: 'interests', title: 'Interests', type: 'interests', column: 'right', page: 1 },
+    { id: 'courses', title: 'Courses', type: 'courses', column: 'right', page: 1 }
+  ])
 
   // Get theme colors based on template
   const theme = themeColors[templateId as keyof typeof themeColors] || themeColors.default
@@ -127,7 +142,7 @@ export default function EditorPage() {
         setShowAddSectionDialog(true)
         break
       case 'Rearrange':
-        // Handle rearrange
+        setIsRearrangeOpen(true)
         break
       case 'Design & Font':
         // Handle design & font
@@ -359,6 +374,18 @@ export default function EditorPage() {
         onClose={() => setShowSectionForm(false)}
         sectionType={selectedSectionType}
         onSave={handleSectionSave}
+      />
+
+      {/* Rearrange Sections Modal */}
+      <RearrangeSections
+        isOpen={isRearrangeOpen}
+        onClose={() => setIsRearrangeOpen(false)}
+        sections={sections}
+        onSave={(updatedSections) => {
+          setSections(updatedSections)
+          setIsRearrangeOpen(false)
+        }}
+        templateId={params.templateId}
       />
     </>
   )

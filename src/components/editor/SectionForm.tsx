@@ -133,51 +133,231 @@ export default function SectionForm({ isOpen, onClose, sectionType, onSave }: Se
     if (!editor) return null
 
     return (
-      <div className="flex flex-wrap gap-2 p-2 border-b border-gray-200">
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`px-2 py-1 rounded ${editor.isActive('bold') ? 'bg-gray-200' : ''}`}
-        >
-          B
-        </button>
-        <button
-          type="button"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`px-2 py-1 rounded ${editor.isActive('italic') ? 'bg-gray-200' : ''}`}
-        >
-          I
-        </button>
-        <select
-          onChange={(e) => editor.chain().focus().setFontFamily(e.target.value).run()}
-          className="px-2 py-1 rounded border border-gray-300"
-        >
-          <option value="Inter">Default</option>
-          <option value="Arial">Arial</option>
-          <option value="Times New Roman">Times New Roman</option>
-        </select>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            className={`px-2 py-1 rounded ${editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''}`}
+      <div className="flex flex-col">
+        {/* Main Toolbar */}
+        <div className="flex flex-wrap gap-1 p-2 border-b border-gray-200 bg-gray-50 rounded-t-md">
+          {/* Text Formatting */}
+          <div className="flex items-center gap-1 border-r border-gray-200 pr-2">
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              className={`p-1 rounded hover:bg-gray-200 ${editor.isActive('bold') ? 'bg-gray-200' : ''}`}
+              title="Bold"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+                <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              className={`p-1 rounded hover:bg-gray-200 ${editor.isActive('italic') ? 'bg-gray-200' : ''}`}
+              title="Italic"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="19" y1="4" x2="10" y2="4"></line>
+                <line x1="14" y1="20" x2="5" y2="20"></line>
+                <line x1="15" y1="4" x2="9" y2="20"></line>
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+              className={`p-1 rounded hover:bg-gray-200 ${editor.isActive('strike') ? 'bg-gray-200' : ''}`}
+              title="Strikethrough"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16 4H9.5a3.5 3.5 0 0 0 0 7H14"></path>
+                <path d="M14 12H8.5a3.5 3.5 0 0 0 0 7H16"></path>
+              </svg>
+            </button>
+          </div>
+
+          {/* Text Alignment */}
+          <div className="flex items-center gap-1 border-r border-gray-200 pr-2">
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().setTextAlign('left').run()}
+              className={`p-1 rounded hover:bg-gray-200 ${editor.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''}`}
+              title="Align Left"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="15" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().setTextAlign('center').run()}
+              className={`p-1 rounded hover:bg-gray-200 ${editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''}`}
+              title="Align Center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="6" y1="12" x2="18" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().setTextAlign('right').run()}
+              className={`p-1 rounded hover:bg-gray-200 ${editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''}`}
+              title="Align Right"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="9" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          {/* Lists */}
+          <div className="flex items-center gap-1 border-r border-gray-200 pr-2">
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              className={`p-1 rounded hover:bg-gray-200 ${editor.isActive('bulletList') ? 'bg-gray-200' : ''}`}
+              title="Bullet List"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="5" cy="6" r="1"></circle>
+                <circle cx="5" cy="12" r="1"></circle>
+                <circle cx="5" cy="18" r="1"></circle>
+                <line x1="9" y1="6" x2="21" y2="6"></line>
+                <line x1="9" y1="12" x2="21" y2="12"></line>
+                <line x1="9" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              className={`p-1 rounded hover:bg-gray-200 ${editor.isActive('orderedList') ? 'bg-gray-200' : ''}`}
+              title="Numbered List"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="5" y1="6" x2="21" y2="6"></line>
+                <line x1="5" y1="12" x2="21" y2="12"></line>
+                <line x1="5" y1="18" x2="21" y2="18"></line>
+                <path d="M3 6h1v1H3z"></path>
+                <path d="M3 12h1v1H3z"></path>
+                <path d="M3 18h1v1H3z"></path>
+              </svg>
+            </button>
+          </div>
+
+          {/* Font Controls */}
+          <div className="flex items-center gap-1 border-r border-gray-200 pr-2">
+            <select
+              onChange={(e) => {
+                const value = e.target.value
+                if (value === 'paragraph') {
+                  editor.chain().focus().setParagraph().run()
+                } else {
+                  editor.chain().focus().toggleHeading({ level: parseInt(value) }).run()
+                }
+              }}
+              className="p-1 rounded border border-gray-300 bg-white text-sm"
+              title="Text Style"
+            >
+              <option value="paragraph">Normal Text</option>
+              <option value="1">Heading 1</option>
+              <option value="2">Heading 2</option>
+              <option value="3">Heading 3</option>
+            </select>
+            <select
+              onChange={(e) => editor.chain().focus().setFontFamily(e.target.value).run()}
+              className="p-1 rounded border border-gray-300 bg-white text-sm"
+              title="Font Family"
+            >
+              <option value="Inter">Inter</option>
+              <option value="Arial">Arial</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Courier New">Courier New</option>
+            </select>
+            <select
+              onChange={(e) => editor.chain().focus().setFontSize(e.target.value).run()}
+              className="p-1 rounded border border-gray-300 bg-white text-sm"
+              title="Font Size"
+            >
+              <option value="12px">12px</option>
+              <option value="14px">14px</option>
+              <option value="16px">16px</option>
+              <option value="18px">18px</option>
+              <option value="20px">20px</option>
+              <option value="24px">24px</option>
+              <option value="28px">28px</option>
+              <option value="32px">32px</option>
+            </select>
+          </div>
+
+          {/* Text Color */}
+          <div className="flex items-center gap-1">
+            <input
+              type="color"
+              onInput={(e) => editor.chain().focus().setColor(e.currentTarget.value).run()}
+              value={editor.getAttributes('textStyle').color || '#000000'}
+              className="w-6 h-6 rounded border border-gray-300 cursor-pointer"
+              title="Text Color"
+            />
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().unsetColor().run()}
+              className="p-1 rounded hover:bg-gray-200"
+              title="Remove Color"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18"></path>
+                <path d="M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Dropdown */}
+        <div className="lg:hidden p-2 border-b border-gray-200 bg-gray-50">
+          <select
+            className="w-full p-2 rounded border border-gray-300 bg-white text-sm"
+            onChange={(e) => {
+              const [command, value] = e.target.value.split(':')
+              if (command === 'fontFamily') {
+                editor.chain().focus().setFontFamily(value).run()
+              } else if (command === 'fontSize') {
+                editor.chain().focus().setFontSize(value).run()
+              } else if (command === 'heading') {
+                if (value === 'paragraph') {
+                  editor.chain().focus().setParagraph().run()
+                } else {
+                  editor.chain().focus().toggleHeading({ level: parseInt(value) }).run()
+                }
+              }
+            }}
           >
-            Left
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().setTextAlign('center').run()}
-            className={`px-2 py-1 rounded ${editor.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''}`}
-          >
-            Center
-          </button>
-          <button
-            type="button"
-            onClick={() => editor.chain().focus().setTextAlign('right').run()}
-            className={`px-2 py-1 rounded ${editor.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''}`}
-          >
-            Right
-          </button>
+            <optgroup label="Text Style">
+              <option value="heading:paragraph">Normal Text</option>
+              <option value="heading:1">Heading 1</option>
+              <option value="heading:2">Heading 2</option>
+              <option value="heading:3">Heading 3</option>
+            </optgroup>
+            <optgroup label="Font Family">
+              <option value="fontFamily:Inter">Inter</option>
+              <option value="fontFamily:Arial">Arial</option>
+              <option value="fontFamily:Times New Roman">Times New Roman</option>
+              <option value="fontFamily:Courier New">Courier New</option>
+            </optgroup>
+            <optgroup label="Font Size">
+              <option value="fontSize:12px">12px</option>
+              <option value="fontSize:14px">14px</option>
+              <option value="fontSize:16px">16px</option>
+              <option value="fontSize:18px">18px</option>
+              <option value="fontSize:20px">20px</option>
+              <option value="fontSize:24px">24px</option>
+              <option value="fontSize:28px">28px</option>
+              <option value="fontSize:32px">32px</option>
+            </optgroup>
+          </select>
         </div>
       </div>
     )
