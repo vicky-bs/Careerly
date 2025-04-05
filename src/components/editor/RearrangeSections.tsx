@@ -24,21 +24,30 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { ModernTealLayoutConfig } from '@/app/templates/ModernTealTemplate';
 
 interface Section {
-  id: string
-  title: string
-  type: string
-  page: number
-  column: number
-  isLocked?: boolean
+  id: string;
+  title: string;
+  type: string;
+  column: number;
+  page: number;
+  isLocked?: boolean;
+  zone?: string; // Added zone property
 }
 
 interface RearrangeSectionsProps {
-  isOpen: boolean
-  onClose: () => void
-  sections: Section[]
-  onSave: (sections: Section[]) => void
+  isOpen: boolean;
+  onClose: () => void;
+  sections: Section[];
+  onSave: (updatedSections: Section[]) => void;
+  templateLayout: {
+    columns: number;
+    boundaries: Array<{
+      column: number;
+      sections: string[];
+    }>;
+  };
 }
 
 const DraggableItem = ({ section, isDragging }: { section: Section; isDragging?: boolean }) => (
@@ -92,25 +101,17 @@ const DroppableContainer = ({ id, children }: { id: string; children: React.Reac
   return (
     <div
       ref={setNodeRef}
-      className={`space-y-2 bg-white p-3 rounded-md shadow-sm border ${
-        isOver ? 'border-blue-500 border-2' : 'border-gray-200'
-      }`}
+      className={`space-y-2 bg-white p-3 rounded-md shadow-sm border ${isOver ? 'border-blue-500 border-2' : 'border-gray-200'}`}
     >
       {children}
     </div>
   );
 };
 
-// Update DndContext configuration and drag overlay behavior
-export default function RearrangeSections({ isOpen, onClose, sections: initialSections, onSave, templateLayout }: RearrangeSectionsProps & { templateLayout: { columns: number; boundaries: { column: number; sections: string[] }[] } }) {
-  const [sections, setSections] = useState<Section[]>(initialSections);
+// Update RearrangeSections to use layout configuration
+export default function RearrangeSections({ isOpen, onClose, sections: initialSections, onSave, templateLayout }: RearrangeSectionsProps) {
+  const [localSections, setLocalSections] = useState<Section[]>(initialSections);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(sections.length / (templateLayout?.boundaries?.length || 1));
-
-  useEffect(() => {
-    setSections(initialSections);
-  }, [initialSections]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -127,42 +128,50 @@ export default function RearrangeSections({ isOpen, onClose, sections: initialSe
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!over) {
-      setActiveId(null);
-      return;
-    }
+    if (!over) return;
 
-    const activeSection = sections.find((s) => s.id === active.id);
-    if (!activeSection) {
-      setActiveId(null);
-      return;
-    }
+    setLocalSections((prevSections) => {
+      const activeSection = prevSections.find((s) => s.id === active.id);
+      if (!activeSection) return prevSections;
 
-    const targetColumn = parseInt(over.id as string, 10);
+      const targetZone = over.id as string;
 
-    setSections((prevSections) => {
-      // If moving to a different column
-      if (activeSection.column !== targetColumn) {
-        return prevSections.map((section) => {
-          if (section.id === active.id) {
-            return { ...section, column: targetColumn };
-          }
-          return section;
-        });
-      }
-
-      // If reordering within the same column
-      const oldIndex = prevSections.findIndex((s) => s.id === active.id);
-      const newIndex = prevSections.findIndex((s) => s.id === over.id);
-      return arrayMove(prevSections, oldIndex, newIndex);
+      return prevSections.map((section) => {
+        if (section.id === active.id) {
+          return { ...section, zone: targetZone };
+        }
+        return section;
+      });
     });
 
     setActiveId(null);
   };
 
+  // Initialize zones based on template layout
+  useEffect(() => {
+    setLocalSections(initialSections.map(section => ({
+      ...section,
+      zone: `column-${section.column}`
+    })));
+  }, [initialSections]);
+
+  // Convert back to column format when saving
+  const handleSave = () => {
+    const updatedSections = localSections.map(section => ({
+      ...section,
+      column: parseInt(section.zone?.split('-')[1] || '1', 10)
+    }));
+    onSave(updatedSections);
+  };
+
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
+    <Dialog
+      as="div"
+      className="fixed inset-0 z-50 overflow-y-auto"
+      onClose={onClose}
+      open={isOpen}
+    >
+      <div className="flex min-h-screen items-center justify-center p-4">
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -172,96 +181,79 @@ export default function RearrangeSections({ isOpen, onClose, sections: initialSe
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="fixed inset-0 bg-black/30" />
         </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+        
+        <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full p-6">
+          <div className="flex justify-between items-center mb-6">
+            <Dialog.Title className="text-lg font-semibold">
+              Rearrange Sections
+            </Dialog.Title>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
             >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-xl bg-white p-6">
-                <Dialog.Title className="text-xl font-medium text-gray-900 mb-4">
-                  Hold & Drag the boxes to rearrange the sections
-                </Dialog.Title>
-                <div className="text-sm text-gray-600 mb-4 text-center">Page {currentPage} of {totalPages}</div>
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCorners}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="grid grid-cols-2 gap-4">
+              {templateLayout.boundaries.map((boundary) => (
+                <DroppableContainer
+                  key={`column-${boundary.column}`}
+                  id={`column-${boundary.column}`}
                 >
-                  <div className={`grid grid-cols-${templateLayout.columns} gap-4 bg-gray-50 p-4 rounded-lg shadow-md`}>
-                    {templateLayout.boundaries.map((boundary) => (
-                      <DroppableContainer key={boundary.column} id={boundary.column.toString()}>
-                        <SortableContext
-                          items={sections.filter((s) => s.column === boundary.column).map((s) => s.id)}
-                          strategy={verticalListSortingStrategy}
-                        >
-                          {sections
-                            .filter((s) => s.column === boundary.column)
-                            .map((section) => (
-                              <SortableItem key={section.id} section={section} />
-                            ))}
-                        </SortableContext>
-                      </DroppableContainer>
-                    ))}
+                  <div className="text-sm font-medium mb-2">
+                    Column {boundary.column}
                   </div>
-                  <DragOverlay dropAnimation={null}>
-                    {activeId ? (
-                      <DraggableItem
-                        section={sections.find((section) => section.id === activeId)!}
-                        isDragging={true}
-                      />
-                    ) : null}
-                  </DragOverlay>
-                </DndContext>
-                <div className="mt-6 flex justify-between items-center">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  <SortableContext
+                    items={localSections
+                      .filter((s) => s.zone === `column-${boundary.column}`)
+                      .map((s) => s.id)}
+                    strategy={verticalListSortingStrategy}
                   >
-                    Previous
-                  </button>
-                  <div className="text-sm text-gray-600">Page {currentPage} of {totalPages}</div>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </div>
-                <div className="mt-6 flex justify-end gap-4">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onSave(sections)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
+                    {localSections
+                      .filter((s) => s.zone === `column-${boundary.column}`)
+                      .map((section) => (
+                        <SortableItem key={section.id} section={section} />
+                      ))}
+                  </SortableContext>
+                </DroppableContainer>
+              ))}
+            </div>
+
+            <DragOverlay>
+              {activeId ? (
+                <DraggableItem
+                  section={localSections.find((section) => section.id === activeId)!}
+                  isDragging
+                />
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
+            >
+              Save Changes
+            </button>
           </div>
         </div>
-      </Dialog>
-    </Transition>
+      </div>
+    </Dialog>
   );
 }

@@ -17,7 +17,18 @@ export const ModernTealTemplateLayout = {
   ],
 }
 
-export default function ModernTealTemplate() {
+interface ModernTealTemplateProps {
+  sections: Array<{
+    id: string;
+    title: string;
+    type: string;
+    column: number;
+    page: number;
+    isLocked?: boolean;
+  }>;
+}
+
+export default function ModernTealTemplate({ sections }: ModernTealTemplateProps) {
   const contentRef = useRef<HTMLDivElement>(null)
   const [pages, setPages] = useState<number>(1)
   const [contentHeight, setContentHeight] = useState<number>(0)

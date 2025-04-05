@@ -10,7 +10,18 @@ export const ModernNavyTemplateLayout = {
   ],
 }
 
-export default function ModernNavyTemplate() {
+interface ModernNavyTemplateProps {
+  sections: Array<{
+    id: string;
+    title: string;
+    type: string;
+    column: number;
+    page: number;
+    isLocked?: boolean;
+  }>;
+}
+
+export default function ModernNavyTemplate({ sections }: ModernNavyTemplateProps) {
   return (
     <div className="bg-white w-full h-full">
       {/* Header Section */}
