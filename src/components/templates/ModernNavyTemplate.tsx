@@ -2,6 +2,14 @@
 
 import { PhoneIcon, GlobeAltIcon, MapPinIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
 
+// Added layout metadata to define the template structure
+export const ModernNavyTemplateLayout = {
+  columns: 1,
+  boundaries: [
+    { column: 1, sections: ['Executive Summary', 'Professional Experience', 'Education', 'Core Competencies', 'Key Achievements', 'Certifications'] },
+  ],
+}
+
 export default function ModernNavyTemplate() {
   return (
     <div className="bg-white w-full h-full">
@@ -119,4 +127,4 @@ export default function ModernNavyTemplate() {
       </div>
     </div>
   )
-} 
+}

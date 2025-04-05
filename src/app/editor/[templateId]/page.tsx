@@ -8,6 +8,8 @@ import { useState, useEffect, useRef } from 'react'
 import { AddSectionDialog } from '@/components/editor/AddSectionDialog'
 import SectionForm from '@/components/editor/SectionForm'
 import RearrangeSections from '@/components/editor/RearrangeSections'
+import { ModernTealTemplateLayout } from '@/components/templates/ModernTealTemplate'
+import { ModernNavyTemplateLayout } from '@/components/templates/ModernNavyTemplate'
 
 // Theme configurations for different templates
 const themeColors = {
@@ -50,6 +52,17 @@ const themeColors = {
   }
 }
 
+const getTemplateLayout = (templateId: string) => {
+  switch (templateId) {
+    case 'modern-teal':
+      return ModernTealTemplateLayout
+    case 'modern-navy':
+      return ModernNavyTemplateLayout
+    default:
+      return { columns: 1, boundaries: [] } // Default layout
+  }
+}
+
 export default function EditorPage() {
   const params = useParams()
   const router = useRouter()
@@ -66,17 +79,17 @@ export default function EditorPage() {
   const [hasOverflow, setHasOverflow] = useState(false)
   const [isRearrangeOpen, setIsRearrangeOpen] = useState(false)
   const [sections, setSections] = useState([
-    { id: 'header', title: 'Header', type: 'header', column: 'left', page: 1, isLocked: true },
-    { id: 'summary', title: 'Summary', type: 'summary', column: 'left', page: 1 },
-    { id: 'education', title: 'Education', type: 'education', column: 'left', page: 1 },
-    { id: 'languages', title: 'Languages', type: 'languages', column: 'left', page: 1 },
-    { id: 'projects', title: 'Projects', type: 'projects', column: 'left', page: 1 },
-    { id: 'experience', title: 'Experience', type: 'experience', column: 'left', page: 1 },
-    { id: 'strengths', title: 'Strengths', type: 'strengths', column: 'right', page: 1 },
-    { id: 'achievements', title: 'Key Achievements', type: 'achievements', column: 'right', page: 1 },
-    { id: 'skills', title: 'Skills', type: 'skills', column: 'right', page: 1 },
-    { id: 'interests', title: 'Interests', type: 'interests', column: 'right', page: 1 },
-    { id: 'courses', title: 'Courses', type: 'courses', column: 'right', page: 1 }
+    { id: 'header', title: 'Header', type: 'header', column: 2, page: 1, isLocked: true },
+    { id: 'summary', title: 'Summary', type: 'summary', column: 2, page: 1 },
+    { id: 'education', title: 'Education', type: 'education', column: 2, page: 1 },
+    { id: 'languages', title: 'Languages', type: 'languages', column: 2, page: 1 },
+    { id: 'projects', title: 'Projects', type: 'projects', column: 2, page: 1 },
+    { id: 'experience', title: 'Experience', type: 'experience', column: 2, page: 1 },
+    { id: 'strengths', title: 'Strengths', type: 'strengths', column: 1, page: 1 },
+    { id: 'achievements', title: 'Key Achievements', type: 'achievements', column: 1, page: 1 },
+    { id: 'skills', title: 'Skills', type: 'skills', column: 1, page: 1 },
+    { id: 'interests', title: 'Interests', type: 'interests', column: 1, page: 1 },
+    { id: 'courses', title: 'Courses', type: 'courses', column: 1, page: 1 }
   ])
 
   // Get theme colors based on template
@@ -216,6 +229,8 @@ export default function EditorPage() {
     // Implement the logic to render overflow content
     return <div>Overflow content rendering logic not implemented</div>
   }
+
+  const templateLayout = getTemplateLayout(templateId)
 
   return (
     <>
@@ -385,8 +400,8 @@ export default function EditorPage() {
           setSections(updatedSections)
           setIsRearrangeOpen(false)
         }}
-        templateId={params.templateId}
+        templateLayout={templateLayout}
       />
     </>
   )
-} 
+}

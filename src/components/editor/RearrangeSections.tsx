@@ -13,6 +13,8 @@ import {
   useSensors,
   DragStartEvent,
   DragEndEvent,
+  DragOverEvent,
+  useDroppable,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -27,8 +29,8 @@ interface Section {
   id: string
   title: string
   type: string
-  column: 'left' | 'right'
   page: number
+  column: number
   isLocked?: boolean
 }
 
@@ -38,6 +40,21 @@ interface RearrangeSectionsProps {
   sections: Section[]
   onSave: (sections: Section[]) => void
 }
+
+const DraggableItem = ({ section, isDragging }: { section: Section; isDragging?: boolean }) => (
+  <div
+    className={`bg-[#EEF3FF] rounded-lg p-3 flex items-center gap-2 ${
+      isDragging ? 'opacity-50' : ''
+    } ${section.isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-grab active:cursor-grabbing'}`}
+  >
+    {!section.isLocked && (
+      <svg className="h-4 w-4 text-gray-400" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M10 13a1 1 0 100-2 1 1 0 000 2zm-4 0a1 1 0 100-2 1 1 0 000 2zm4-4a1 1 0 100-2 1 1 0 000 2zm-4 0a1 1 0 100-2 1 1 0 000 2zm4-4a1 1 0 100-2 1 1 0 000 2zm-4 0a1 1 0 100-2 1 1 0 000 2z"/>
+      </svg>
+    )}
+    <span className="text-sm">{section.title}</span>
+  </div>
+);
 
 function SortableItem({ section }: { section: Section }) {
   const {
@@ -50,106 +67,98 @@ function SortableItem({ section }: { section: Section }) {
   } = useSortable({
     id: section.id,
     disabled: section.isLocked,
-  })
+  });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
+  const style = transform ? {
+    transform: CSS.Translate.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
-  }
+    opacity: isDragging ? 0.5 : undefined,
+    cursor: section.isLocked ? 'not-allowed' : 'grab',
+  } : undefined;
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <DraggableItem section={section} isDragging={isDragging} />
+    </div>
+  );
+}
+
+// Implement container-based drag-and-drop
+const DroppableContainer = ({ id, children }: { id: string; children: React.ReactNode }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id,
+  });
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`bg-[#EEF3FF] rounded-lg p-3 flex items-center gap-2 ${
-        section.isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-grab active:cursor-grabbing'
+      className={`space-y-2 bg-white p-3 rounded-md shadow-sm border ${
+        isOver ? 'border-blue-500 border-2' : 'border-gray-200'
       }`}
-      {...attributes}
-      {...listeners}
     >
-      {!section.isLocked && (
-        <svg className="h-4 w-4 text-gray-400" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M10 13a1 1 0 100-2 1 1 0 000 2zm-4 0a1 1 0 100-2 1 1 0 000 2zm4-4a1 1 0 100-2 1 1 0 000 2zm-4 0a1 1 0 100-2 1 1 0 000 2zm4-4a1 1 0 100-2 1 1 0 000 2zm-4 0a1 1 0 100-2 1 1 0 000 2z"/>
-        </svg>
-      )}
-      {section.isLocked && (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-        </svg>
-      )}
-      <span className="text-sm">{section.title}</span>
+      {children}
     </div>
-  )
-}
+  );
+};
 
-function DraggableItem({ section }: { section: Section }) {
-  return (
-    <div className="bg-[#EEF3FF] rounded-lg p-3 flex items-center gap-2">
-      <svg className="h-4 w-4 text-gray-400" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M10 13a1 1 0 100-2 1 1 0 000 2zm-4 0a1 1 0 100-2 1 1 0 000 2zm4-4a1 1 0 100-2 1 1 0 000 2zm-4 0a1 1 0 100-2 1 1 0 000 2zm4-4a1 1 0 100-2 1 1 0 000 2zm-4 0a1 1 0 100-2 1 1 0 000 2z"/>
-      </svg>
-      <span className="text-sm">{section.title}</span>
-    </div>
-  )
-}
-
-export default function RearrangeSections({ isOpen, onClose, sections: initialSections, onSave }: RearrangeSectionsProps) {
-  const [sections, setSections] = useState<Section[]>(initialSections)
-  const [activeId, setActiveId] = useState<string | null>(null)
+// Update DndContext configuration and drag overlay behavior
+export default function RearrangeSections({ isOpen, onClose, sections: initialSections, onSave, templateLayout }: RearrangeSectionsProps & { templateLayout: { columns: number; boundaries: { column: number; sections: string[] }[] } }) {
+  const [sections, setSections] = useState<Section[]>(initialSections);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(sections.length / (templateLayout?.boundaries?.length || 1));
 
   useEffect(() => {
-    setSections(initialSections)
-  }, [initialSections])
+    setSections(initialSections);
+  }, [initialSections]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
       },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
     })
-  )
+  );
 
-  const leftSections = sections.filter(s => s.column === 'left' && s.type !== 'header')
-  const rightSections = sections.filter(s => s.column === 'right' && s.type !== 'header')
-  const headerSection = sections.find(s => s.type === 'header')
-  const activeSection = sections.find(s => s.id === activeId)
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
 
-  function handleDragStart(event: DragStartEvent) {
-    setActiveId(event.active.id as string)
-  }
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
     if (!over) {
-      setActiveId(null)
-      return
+      setActiveId(null);
+      return;
     }
 
-    if (active.id !== over.id) {
-      setSections((sections) => {
-        const oldIndex = sections.findIndex((s) => s.id === active.id)
-        const newIndex = sections.findIndex((s) => s.id === over.id)
-
-        const newSections = arrayMove(sections, oldIndex, newIndex)
-        const activeSection = sections[oldIndex]
-        const overSection = sections[newIndex]
-
-        // Update column if moving between columns
-        if (activeSection.column !== overSection.column) {
-          newSections[newIndex] = { ...newSections[newIndex], column: overSection.column }
-        }
-
-        return newSections
-      })
+    const activeSection = sections.find((s) => s.id === active.id);
+    if (!activeSection) {
+      setActiveId(null);
+      return;
     }
 
-    setActiveId(null)
-  }
+    const targetColumn = parseInt(over.id as string, 10);
+
+    setSections((prevSections) => {
+      // If moving to a different column
+      if (activeSection.column !== targetColumn) {
+        return prevSections.map((section) => {
+          if (section.id === active.id) {
+            return { ...section, column: targetColumn };
+          }
+          return section;
+        });
+      }
+
+      // If reordering within the same column
+      const oldIndex = prevSections.findIndex((s) => s.id === active.id);
+      const newIndex = prevSections.findIndex((s) => s.id === over.id);
+      return arrayMove(prevSections, oldIndex, newIndex);
+    });
+
+    setActiveId(null);
+  };
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -177,92 +186,76 @@ export default function RearrangeSections({ isOpen, onClose, sections: initialSe
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-xl bg-white p-6">
-                <div className="mb-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <Dialog.Title as="h3" className="text-xl font-medium text-gray-900">
-                      Hold & Drag the boxes to rearrange the sections
-                    </Dialog.Title>
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="text-gray-400 hover:text-gray-500"
-                    >
-                      <XMarkIcon className="h-6 w-6" />
-                    </button>
+              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-xl bg-white p-6">
+                <Dialog.Title className="text-xl font-medium text-gray-900 mb-4">
+                  Hold & Drag the boxes to rearrange the sections
+                </Dialog.Title>
+                <div className="text-sm text-gray-600 mb-4 text-center">Page {currentPage} of {totalPages}</div>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCorners}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div className={`grid grid-cols-${templateLayout.columns} gap-4 bg-gray-50 p-4 rounded-lg shadow-md`}>
+                    {templateLayout.boundaries.map((boundary) => (
+                      <DroppableContainer key={boundary.column} id={boundary.column.toString()}>
+                        <SortableContext
+                          items={sections.filter((s) => s.column === boundary.column).map((s) => s.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {sections
+                            .filter((s) => s.column === boundary.column)
+                            .map((section) => (
+                              <SortableItem key={section.id} section={section} />
+                            ))}
+                        </SortableContext>
+                      </DroppableContainer>
+                    ))}
                   </div>
-
-                  <div>
-                    <div className="text-sm text-gray-600 mb-4">Page 1 of 1</div>
-                    <div className="bg-white rounded-lg border p-6">
-                      {headerSection && (
-                        <div className="w-full bg-[#EEF3FF] rounded-lg p-3 mb-4">
-                          <div className="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-sm font-medium">{headerSection.title}</span>
-                          </div>
-                        </div>
-                      )}
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCorners}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                      >
-                        <div className="grid grid-cols-2 gap-6">
-                          {/* Left Column */}
-                          <div className="space-y-2">
-                            <SortableContext
-                              items={sections.map(s => s.id)}
-                              strategy={verticalListSortingStrategy}
-                            >
-                              {leftSections.map((section) => (
-                                <SortableItem key={section.id} section={section} />
-                              ))}
-                            </SortableContext>
-                          </div>
-
-                          {/* Right Column */}
-                          <div className="space-y-2">
-                            <SortableContext
-                              items={sections.map(s => s.id)}
-                              strategy={verticalListSortingStrategy}
-                            >
-                              {rightSections.map((section) => (
-                                <SortableItem key={section.id} section={section} />
-                              ))}
-                            </SortableContext>
-                          </div>
-                        </div>
-
-                        <DragOverlay>
-                          {activeSection ? <DraggableItem section={activeSection} /> : null}
-                        </DragOverlay>
-                      </DndContext>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSave(sections)
-                        onClose()
-                      }}
-                      className="px-4 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-md hover:bg-teal-700"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
+                  <DragOverlay dropAnimation={null}>
+                    {activeId ? (
+                      <DraggableItem
+                        section={sections.find((section) => section.id === activeId)!}
+                        isDragging={true}
+                      />
+                    ) : null}
+                  </DragOverlay>
+                </DndContext>
+                <div className="mt-6 flex justify-between items-center">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <div className="text-sm text-gray-600">Page {currentPage} of {totalPages}</div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+                <div className="mt-6 flex justify-end gap-4">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSave(sections)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Save Changes
+                  </button>
                 </div>
               </Dialog.Panel>
             </Transition.Child>
@@ -270,5 +263,5 @@ export default function RearrangeSections({ isOpen, onClose, sections: initialSe
         </div>
       </Dialog>
     </Transition>
-  )
-} 
+  );
+}

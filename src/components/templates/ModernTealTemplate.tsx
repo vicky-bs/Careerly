@@ -8,6 +8,15 @@ const A4_WIDTH_PX = 794 // 210mm
 const A4_HEIGHT_PX = 1123 // 297mm
 const PAGE_MARGIN = 32 // 8mm margin in pixels
 
+// Added layout metadata to define the template structure
+export const ModernTealTemplateLayout = {
+  columns: 2,
+  boundaries: [
+    { column: 1, sections: ['Strengths', 'Key Achievements', 'Skills', 'Interests', 'Courses'] },
+    { column: 2, sections: ['Header', 'Summary', 'Experience', 'Education', 'Languages', 'Projects'] },
+  ],
+}
+
 export default function ModernTealTemplate() {
   const contentRef = useRef<HTMLDivElement>(null)
   const [pages, setPages] = useState<number>(1)
@@ -183,4 +192,4 @@ export default function ModernTealTemplate() {
       </div>
     </div>
   )
-} 
+}
