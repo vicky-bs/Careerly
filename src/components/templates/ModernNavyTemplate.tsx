@@ -10,16 +10,133 @@ export const ModernNavyTemplateLayout = {
   ],
 }
 
-interface ModernNavyTemplateProps {
-  sections: Array<{
-    id: string;
-    title: string;
-    type: string;
-    column: number;
-    page: number;
-    isLocked?: boolean;
-  }>;
+interface Section {
+  id: string;
+  title: string;
+  type: string;
+  column: number;
+  page: number;
+  data?: any;
+  isLocked?: boolean;
 }
+
+interface ModernNavyTemplateProps {
+  sections: Section[];
+}
+
+// Section rendering components
+const ExperienceSection = ({ data }: { data: any }) => {
+  if (!data) return null;
+  
+  return (
+    <div className="mb-6">
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <h3 className="text-lg font-semibold text-navy-800">{data.jobTitle}</h3>
+          <p className="text-navy-700 font-medium">{data.company}</p>
+        </div>
+        <div className="text-sm text-navy-600">
+          <span>{data.startDate}</span>
+          {data.endDate && <> - {data.endDate}</>}
+          <span className="mx-2">•</span>
+          <span>{data.location}</span>
+        </div>
+      </div>
+      <div className="mt-2 text-navy-600" dangerouslySetInnerHTML={{ __html: data.description }} />
+    </div>
+  );
+};
+
+const EducationSection = ({ data }: { data: any }) => {
+  if (!data) return null;
+  
+  return (
+    <div className="mb-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-lg font-semibold text-navy-800">{data.degree}</h3>
+          <p className="text-navy-700 font-medium">{data.institution}</p>
+        </div>
+        <div className="text-sm text-navy-600">
+          <span>{data.graduationDate}</span>
+          <span className="mx-2">•</span>
+          <span>{data.location}</span>
+        </div>
+      </div>
+      {data.description && (
+        <div className="mt-2 text-navy-600" dangerouslySetInnerHTML={{ __html: data.description }} />
+      )}
+    </div>
+  );
+};
+
+const SkillsSection = ({ data }: { data: any }) => {
+  if (!data) return null;
+  
+  return (
+    <div className="mb-6">
+      <h3 className="text-lg font-semibold text-navy-800 mb-2">{data.category || 'Skills'}</h3>
+      <div className="grid grid-cols-2 gap-6 text-navy-600">
+        {data.skills?.split(',').map((skill: string, index: number) => (
+          <div key={index} className="flex items-center gap-2">
+            <span>{skill.trim()}</span>
+          </div>
+        )) || null}
+      </div>
+    </div>
+  );
+};
+
+const LanguagesSection = ({ data }: { data: any }) => {
+  if (!data) return null;
+  
+  return (
+    <div className="mb-4">
+      <div className="flex justify-between items-center">
+        <span className="text-navy-700 font-medium">{data.language}</span>
+        <span className="text-sm text-navy-600">{data.proficiency}</span>
+      </div>
+    </div>
+  );
+};
+
+const ProjectsSection = ({ data }: { data: any }) => {
+  if (!data) return null;
+  
+  return (
+    <div className="mb-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-lg font-semibold text-navy-800">{data.projectName}</h3>
+          <p className="text-navy-700 font-medium">{data.role}</p>
+        </div>
+        <div className="text-sm text-navy-600">
+          <span>{data.startDate}</span>
+          {data.endDate && <> - {data.endDate}</>}
+        </div>
+      </div>
+      <p className="text-sm text-navy-600 mt-1">Technologies: {data.technologies}</p>
+      <div className="mt-2 text-navy-600" dangerouslySetInnerHTML={{ __html: data.description }} />
+    </div>
+  );
+};
+
+const renderSection = (section: Section) => {
+  switch (section.type) {
+    case 'experience':
+      return <ExperienceSection data={section.data} />;
+    case 'education':
+      return <EducationSection data={section.data} />;
+    case 'skills':
+      return <SkillsSection data={section.data} />;
+    case 'languages':
+      return <LanguagesSection data={section.data} />;
+    case 'projects':
+      return <ProjectsSection data={section.data} />;
+    default:
+      return null;
+  }
+};
 
 export default function ModernNavyTemplate({ sections }: ModernNavyTemplateProps) {
   return (
@@ -53,89 +170,16 @@ export default function ModernNavyTemplate({ sections }: ModernNavyTemplateProps
       {/* Main Content */}
       <div className="p-8">
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Summary Section */}
-          <section>
-            <h2 className="text-xl font-semibold mb-4 text-navy-800 border-b-2 border-navy-200 pb-2">EXECUTIVE SUMMARY</h2>
-            <p className="text-navy-700 leading-relaxed">Write your professional summary here...</p>
-          </section>
-
-          {/* Experience Section */}
-          <section>
-            <h2 className="text-xl font-semibold mb-4 text-navy-800 border-b-2 border-navy-200 pb-2">PROFESSIONAL EXPERIENCE</h2>
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-lg font-semibold text-navy-800">Job Title</h3>
-                  <div className="text-sm text-navy-600">
-                    <span>Date Range</span>
-                    <span className="mx-2">•</span>
-                    <span>Location</span>
-                  </div>
-                </div>
-                <p className="text-navy-700 mb-2 font-medium">Company Name</p>
-                <ul className="list-disc list-inside text-navy-600 space-y-1.5 ml-1">
-                  <li>Key achievement or responsibility</li>
-                  <li>Key achievement or responsibility</li>
-                  <li>Key achievement or responsibility</li>
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          {/* Education Section */}
-          <section>
-            <h2 className="text-xl font-semibold mb-4 text-navy-800 border-b-2 border-navy-200 pb-2">EDUCATION</h2>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between items-start">
-                  <h3 className="text-lg font-semibold text-navy-800">Degree Name</h3>
-                  <span className="text-navy-600">Graduation Year</span>
-                </div>
-                <p className="text-navy-700 font-medium">Institution Name</p>
-              </div>
-            </div>
-          </section>
-
-          {/* Skills Section */}
-          <section>
-            <h2 className="text-xl font-semibold mb-4 text-navy-800 border-b-2 border-navy-200 pb-2">CORE COMPETENCIES</h2>
-            <div className="grid grid-cols-2 gap-6 text-navy-600">
-              <ul className="list-disc list-inside space-y-1.5">
-                <li>Strategic Planning</li>
-                <li>Team Leadership</li>
-                <li>Project Management</li>
-                <li>Business Development</li>
-              </ul>
-              <ul className="list-disc list-inside space-y-1.5">
-                <li>Change Management</li>
-                <li>Risk Assessment</li>
-                <li>Stakeholder Relations</li>
-                <li>Process Optimization</li>
-              </ul>
-            </div>
-          </section>
-
-          {/* Achievements Section */}
-          <section>
-            <h2 className="text-xl font-semibold mb-4 text-navy-800 border-b-2 border-navy-200 pb-2">KEY ACHIEVEMENTS</h2>
-            <ul className="list-disc list-inside text-navy-600 space-y-2">
-              <li>Led successful digital transformation initiative resulting in 30% efficiency improvement</li>
-              <li>Managed $10M+ project portfolio with consistent on-time, under-budget delivery</li>
-              <li>Developed and implemented strategic plans leading to 25% revenue growth</li>
-            </ul>
-          </section>
-
-          {/* Certifications Section */}
-          <section>
-            <h2 className="text-xl font-semibold mb-4 text-navy-800 border-b-2 border-navy-200 pb-2">CERTIFICATIONS</h2>
-            <ul className="list-disc list-inside text-navy-600 space-y-1.5">
-              <li>Project Management Professional (PMP)</li>
-              <li>Certified Scrum Master (CSM)</li>
-              <li>Six Sigma Black Belt</li>
-            </ul>
-          </section>
+          {sections.map(section => (
+            <section key={section.id}>
+              <h2 className="text-xl font-semibold mb-4 text-navy-800 border-b-2 border-navy-200 pb-2">
+                {section.title.toUpperCase()}
+              </h2>
+              {renderSection(section)}
+            </section>
+          ))}
         </div>
       </div>
     </div>
-  )
+  );
 }

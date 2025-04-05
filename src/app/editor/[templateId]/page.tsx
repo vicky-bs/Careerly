@@ -10,6 +10,7 @@ import SectionForm from '@/components/editor/SectionForm'
 import RearrangeSections from '@/components/editor/RearrangeSections'
 import { ModernTealTemplateLayout } from '@/components/templates/ModernTealTemplate'
 import { ModernNavyTemplateLayout } from '@/components/templates/ModernNavyTemplate'
+import { TemplateJSON } from '@/types/template'
 
 // Theme configurations for different templates
 const themeColors = {
@@ -70,6 +71,7 @@ interface Section {
   column: number
   page: number
   isLocked?: boolean
+  data?: any
 }
 
 export default function EditorPage() {
@@ -100,6 +102,14 @@ export default function EditorPage() {
     { id: 'interests', title: 'Interests', column: 1, page: 1, type: 'interests' },
     { id: 'courses', title: 'Courses', column: 1, page: 1, type: 'courses' },
   ])
+  const [styles, setStyles] = useState({
+    primaryColor: '#0F766E',
+    secondaryColor: '#134E4A',
+    headingFont: 'Inter',
+    bodyFont: 'Inter',
+    sectionSpacing: 4,
+    contentPadding: 4
+  })
 
   // Get theme colors based on template
   const theme = themeColors[templateId as keyof typeof themeColors] || themeColors.default
@@ -145,6 +155,52 @@ export default function EditorPage() {
     }
   }, [contentRef.current, pages.length])
 
+  // Load saved template configuration if available
+  useEffect(() => {
+    const savedConfig = localStorage.getItem('template_config')
+    if (savedConfig) {
+      try {
+        const config = JSON.parse(savedConfig) as TemplateJSON
+        
+        // Update sections with template configuration
+        if (config.sections) {
+          setSections(prevSections => {
+            // Preserve existing data while updating layout and styling
+            const updatedSections = prevSections.map(section => {
+              const templateSection = config.sections.find(s => s.type === section.type)
+              if (templateSection) {
+                return {
+                  ...section,
+                  ...templateSection,
+                  // Preserve the existing data
+                  data: section.data
+                }
+              }
+              return section
+            })
+            return updatedSections
+          })
+        }
+
+        // Update the global CSS variables for styling
+        if (config.styles) {
+          document.documentElement.style.setProperty('--primary-color', config.styles.primaryColor)
+          document.documentElement.style.setProperty('--secondary-color', config.styles.secondaryColor)
+          document.documentElement.style.setProperty('--heading-font', config.styles.headingFont)
+          document.documentElement.style.setProperty('--body-font', config.styles.bodyFont)
+          document.documentElement.style.setProperty('--section-spacing', `${config.styles.sectionSpacing * 0.25}rem`)
+          document.documentElement.style.setProperty('--content-padding', `${config.styles.contentPadding * 0.25}rem`)
+        }
+
+        // Clear the saved configuration
+        localStorage.removeItem('template_config')
+
+      } catch (error) {
+        console.error('Error applying template configuration:', error)
+      }
+    }
+  }, [])
+
   const handleZoomIn = () => {
     setScale((prev) => Math.min(prev + 0.1, 1.5))
   }
@@ -157,8 +213,18 @@ export default function EditorPage() {
     console.log('Button clicked:', label)
     switch (label) {
       case 'Templates':
-        console.log('Navigating to templates page...')
-        router.push('/templates')
+        // Store current sections and template data in localStorage before navigating
+        const templateData = {
+          sections,
+          styles,
+          templateId,
+          metadata: {
+            name: 'Current Template',
+            description: 'User template configuration'
+          }
+        }
+        localStorage.setItem('current_template_data', JSON.stringify(templateData))
+        router.push('/templates/editor')
         break
       case 'Add section':
         setShowAddSectionDialog(true)
@@ -200,10 +266,120 @@ export default function EditorPage() {
     setShowSectionForm(true)
   }
 
+  const getDefaultColumnForSection = (sectionType: string, templateLayout: any) => {
+    // Find which column this section type belongs to by default
+    for (const boundary of templateLayout.boundaries) {
+      if (boundary.sections.includes(sectionType)) {
+        return boundary.column;
+      }
+    }
+    // Default to first column if not specified
+    return templateLayout.boundaries[0]?.column || 1;
+  };
+
   const handleSectionSave = (data: any) => {
-    console.log('Saving section:', selectedSectionType, data)
-    // TODO: Add the section to the resume
+    const layout = getTemplateLayout(templateId);
+    const defaultColumn = getDefaultColumnForSection(selectedSectionType, layout);
+    
+    // Generate a unique ID for the new section
+    const newSection = {
+      id: `${selectedSectionType}-${Date.now()}`,
+      title: data.jobTitle || data.projectName || data.degree || data.language || data.interests || selectedSectionType,
+      type: selectedSectionType,
+      column: defaultColumn,
+      page: 1,
+      data: {
+        ...data,
+        // Ensure key fields are properly set based on section type
+        jobTitle: data.jobTitle,
+        company: data.company,
+        location: data.location,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        description: data.description,
+        degree: data.degree,
+        institution: data.institution,
+        graduationDate: data.graduationDate,
+        technologies: data.technologies,
+        projectName: data.projectName,
+        role: data.role,
+        language: data.language,
+        proficiency: data.proficiency,
+        interests: data.interests
+      }
+    };
+
+    setSections(prevSections => [...prevSections, newSection]);
+    setShowSectionForm(false);
   }
+
+  const handleImportJSON = (importedJSON: any) => {
+    try {
+      console.log('Starting JSON import...'); // Debug point
+      console.log('Imported JSON:', importedJSON); // Debug point
+
+      // Map colorPalette to styles
+      if (importedJSON.colorPalette) {
+        console.log('Mapping colorPalette to styles...'); // Debug point
+        setStyles((prevStyles) => ({
+          ...prevStyles,
+          primaryColor: importedJSON.colorPalette.primaryColor || prevStyles.primaryColor,
+          secondaryColor: importedJSON.colorPalette.secondaryColor || prevStyles.secondaryColor,
+        }));
+
+        // Apply colors to global CSS variables
+        document.documentElement.style.setProperty('--primary-color', importedJSON.colorPalette.primaryColor);
+        document.documentElement.style.setProperty('--secondary-color', importedJSON.colorPalette.secondaryColor);
+      }
+
+      // Map layout and sections
+      if (importedJSON.layout) {
+        console.log('Mapping layout and sections...'); // Debug point
+        const { columns, sectionArrangement } = importedJSON.layout;
+        if (columns) {
+          console.log('Setting columns:', columns); // Debug point
+          document.documentElement.style.setProperty('--columns', columns.toString());
+        }
+        if (sectionArrangement) {
+          console.log('Setting section arrangement:', sectionArrangement); // Debug point
+          const updatedSections = sectionArrangement.flatMap((column: any, columnIndex: number) =>
+            column.sections.map((sectionId: string, order: number) => ({
+              id: sectionId,
+              title: sectionId.replace(/\(.*\)/, '').trim(), // Generate a title from the ID
+              type: 'section', // Default type
+              column: columnIndex + 1,
+              page: 1,
+              order,
+            }))
+          );
+          console.log('Updated sections:', updatedSections); // Debug point
+          setSections(updatedSections);
+        }
+      }
+
+      // Map styles
+      if (importedJSON.styles) {
+        console.log('Mapping styles...'); // Debug point
+        setStyles((prevStyles) => ({
+          ...prevStyles,
+          headingFont: importedJSON.styles.fontFamily?.heading || prevStyles.headingFont,
+          bodyFont: importedJSON.styles.fontFamily?.body || prevStyles.bodyFont,
+          sectionSpacing: parseFloat(importedJSON.layout?.spacing?.sectionGap) || prevStyles.sectionSpacing,
+          contentPadding: parseFloat(importedJSON.layout?.spacing?.itemGap) || prevStyles.contentPadding,
+        }));
+
+        // Apply font styles to global CSS variables
+        document.documentElement.style.setProperty('--heading-font', importedJSON.styles.fontFamily?.heading);
+        document.documentElement.style.setProperty('--body-font', importedJSON.styles.fontFamily?.body);
+        document.documentElement.style.setProperty('--section-spacing', `${parseFloat(importedJSON.layout?.spacing?.sectionGap) || 4}rem`);
+        document.documentElement.style.setProperty('--content-padding', `${parseFloat(importedJSON.layout?.spacing?.itemGap) || 4}rem`);
+      }
+
+      console.log('Template imported successfully:', importedJSON); // Debug point
+    } catch (error) {
+      console.error('Error importing template JSON:', error); // Debug point
+    }
+  };
 
   const sidebarItems = [
     { icon: PlusIcon, label: 'Add section', badge: null },
@@ -411,6 +587,29 @@ export default function EditorPage() {
         }}
         templateLayout={templateLayout}
       />
+
+      {/* Import JSON Button */}
+      <button
+        onClick={() => {
+          console.log('Import JSON button clicked'); // Debug point
+          const jsonInput = prompt('Paste your JSON here:');
+          if (jsonInput) {
+            console.log('JSON input received:', jsonInput); // Debug point
+            try {
+              const importedJSON = JSON.parse(jsonInput);
+              console.log('Parsed JSON:', importedJSON); // Debug point
+              handleImportJSON(importedJSON);
+            } catch (error) {
+              console.error('Error parsing JSON:', error); // Debug point
+            }
+          } else {
+            console.log('No JSON input provided'); // Debug point
+          }
+        }}
+        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+      >
+        Import JSON
+      </button>
     </>
   )
 }

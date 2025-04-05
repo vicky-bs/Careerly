@@ -17,16 +17,133 @@ export const ModernTealTemplateLayout = {
   ],
 }
 
-interface ModernTealTemplateProps {
-  sections: Array<{
-    id: string;
-    title: string;
-    type: string;
-    column: number;
-    page: number;
-    isLocked?: boolean;
-  }>;
+interface Section {
+  id: string;
+  title: string;
+  type: string;
+  column: number;
+  page: number;
+  data?: any;
+  isLocked?: boolean;
 }
+
+interface ModernTealTemplateProps {
+  sections: Section[];
+}
+
+// Section rendering components
+const ExperienceSection = ({ data }: { data: any }) => {
+  if (!data) return null;
+  
+  return (
+    <div className="mb-4">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="font-semibold">{data.jobTitle}</h3>
+          <p className="text-gray-600">{data.company}</p>
+        </div>
+        <div className="text-sm text-gray-600">
+          <span>{data.startDate}</span>
+          {data.endDate && <> - {data.endDate}</>}
+          <span className="mx-2">•</span>
+          <span>{data.location}</span>
+        </div>
+      </div>
+      <div className="mt-2" dangerouslySetInnerHTML={{ __html: data.description }} />
+    </div>
+  );
+};
+
+const EducationSection = ({ data }: { data: any }) => {
+  if (!data) return null;
+  
+  return (
+    <div className="mb-4">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="font-semibold">{data.degree}</h3>
+          <p className="text-gray-600">{data.institution}</p>
+        </div>
+        <div className="text-sm text-gray-600">
+          <span>{data.graduationDate}</span>
+          <span className="mx-2">•</span>
+          <span>{data.location}</span>
+        </div>
+      </div>
+      {data.description && <div className="mt-2" dangerouslySetInnerHTML={{ __html: data.description }} />}
+    </div>
+  );
+};
+
+const SkillsSection = ({ data }: { data: any }) => {
+  if (!data) return null;
+  
+  return (
+    <div className="mb-4">
+      <h3 className="font-semibold mb-2">{data.category || 'Skills'}</h3>
+      <div className="flex flex-wrap gap-2">
+        {data.skills?.split(',').map((skill: string, index: number) => (
+          <span key={index} className="px-2 py-1 bg-gray-100 rounded-full text-sm">
+            {skill.trim()}
+          </span>
+        )) || null}
+      </div>
+    </div>
+  );
+};
+
+const LanguagesSection = ({ data }: { data: any }) => {
+  if (!data) return null;
+  
+  return (
+    <div className="mb-4">
+      <div className="flex justify-between items-center">
+        <span className="font-medium">{data.language}</span>
+        <span className="text-sm text-gray-600">{data.proficiency}</span>
+      </div>
+    </div>
+  );
+};
+
+const ProjectsSection = ({ data }: { data: any }) => {
+  if (!data) return null;
+  
+  return (
+    <div className="mb-4">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="font-semibold">{data.projectName}</h3>
+          <p className="text-gray-600">{data.role}</p>
+        </div>
+        <div className="text-sm text-gray-600">
+          <span>{data.startDate}</span>
+          {data.endDate && <> - {data.endDate}</>}
+        </div>
+      </div>
+      <div className="mt-2">
+        <p className="text-sm text-gray-600">Technologies: {data.technologies}</p>
+        <div dangerouslySetInnerHTML={{ __html: data.description }} />
+      </div>
+    </div>
+  );
+};
+
+const renderSection = (section: Section) => {
+  switch (section.type) {
+    case 'experience':
+      return <ExperienceSection data={section.data} />;
+    case 'education':
+      return <EducationSection data={section.data} />;
+    case 'skills':
+      return <SkillsSection data={section.data} />;
+    case 'languages':
+      return <LanguagesSection data={section.data} />;
+    case 'projects':
+      return <ProjectsSection data={section.data} />;
+    default:
+      return null;
+  }
+};
 
 export default function ModernTealTemplate({ sections }: ModernTealTemplateProps) {
   const contentRef = useRef<HTMLDivElement>(null)
@@ -51,154 +168,37 @@ export default function ModernTealTemplate({ sections }: ModernTealTemplateProps
     return () => observer.disconnect()
   }, [])
 
+  // Group sections by column
+  const columnSections = {
+    1: sections.filter(s => s.column === 1),
+    2: sections.filter(s => s.column === 2)
+  };
+
   return (
     <div ref={contentRef} className="relative">
       <div className="flex min-h-[297mm] w-[210mm] relative">
         {/* Left Column - Teal background */}
         <div className="w-1/3 bg-teal-700 text-white p-8">
-          {/* Name Section */}
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold mb-1">YOUR NAME</h1>
-          </div>
-
-          {/* Strengths Section */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 border-b border-white/30 pb-2">STRENGTHS</h2>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-2">Leadership</h3>
-                <p className="text-sm text-white/90">Strong leadership skills and ability to motivate teams towards common goals</p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Decision Making</h3>
-                <p className="text-sm text-white/90">Adaptive decision-making skills in high-pressure environments</p>
-              </div>
-            </div>
-          </section>
-
-          {/* Key Achievements Section */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 border-b border-white/30 pb-2">KEY ACHIEVEMENTS</h2>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-2">Automation and Operational Efficiency</h3>
-                <p className="text-sm text-white/90">Successfully implemented automation initiatives resulting in significant operational savings and efficiency improvements</p>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Revenue Generation</h3>
-                <p className="text-sm text-white/90">Achieved substantial revenue generation through strategic management of major accounts</p>
-              </div>
-            </div>
-          </section>
-
-          {/* Skills Section */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 border-b border-white/30 pb-2">SKILLS</h2>
-            <p className="text-sm text-white/90">Agile • Docker • IBM • IELTS • Kaizen • PMO • Python • RFP • Scrum • Gmail</p>
-          </section>
-
-          {/* Interests Section */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 border-b border-white/30 pb-2">INTERESTS</h2>
-            <div className="space-y-4">
-              <div className="flex items-start gap-2">
-                <StarIcon className="h-5 w-5 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold mb-1">Technology Enthusiast</h3>
-                  <p className="text-sm text-white/90">Passionate about technology and its integration to enhance business processes</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <HeartIcon className="h-5 w-5 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold mb-1">Social Networking</h3>
-                  <p className="text-sm text-white/90">Enjoys social activities and networking to build professional relationships</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <GlobeAmericasIcon className="h-5 w-5 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold mb-1">Travel Enthusiast</h3>
-                  <p className="text-sm text-white/90">Has a keen interest in travel and exploring new cultures</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Courses Section */}
-          <section>
-            <h2 className="text-xl font-semibold mb-4 border-b border-white/30 pb-2">COURSES</h2>
-            <p className="text-sm text-white/90">Course Title</p>
-          </section>
+          {columnSections[1].map(section => (
+            <section key={section.id} className="mb-8">
+              <h2 className="text-xl font-semibold mb-4 border-b border-white/30 pb-2">
+                {section.title.toUpperCase()}
+              </h2>
+              {renderSection(section)}
+            </section>
+          ))}
         </div>
 
         {/* Right Column - White background */}
         <div className="w-2/3 p-8 bg-white">
-          {/* Title Section */}
-          <div className="mb-6">
-            <h2 className="text-2xl text-teal-600 font-medium mb-4">Program Lead</h2>
-            <div className="space-y-2 text-gray-600">
-              <div className="flex items-center gap-2">
-                <PhoneIcon className="h-4 w-4" />
-                <span>Phone number</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <EnvelopeIcon className="h-4 w-4" />
-                <span>Email address</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <GlobeAltIcon className="h-4 w-4" />
-                <span>LinkedIn URL</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPinIcon className="h-4 w-4" />
-                <span>Location</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Summary Section */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 border-b border-gray-200 pb-2">SUMMARY</h2>
-            <p className="text-gray-600">Write your professional summary here...</p>
-          </section>
-
-          {/* Experience Section */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4 border-b border-gray-200 pb-2">EXPERIENCE</h2>
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold">Job Title</h3>
-                  <div className="text-sm text-gray-600">
-                    <span>Date Range</span>
-                    <span className="mx-2">•</span>
-                    <span>Location</span>
-                  </div>
-                </div>
-                <p className="text-gray-600 mb-1">Company Name</p>
-                <ul className="list-disc list-inside text-gray-600 space-y-1">
-                  <li>Key achievement or responsibility</li>
-                  <li>Key achievement or responsibility</li>
-                  <li>Key achievement or responsibility</li>
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          {/* Education Section */}
-          <section>
-            <h2 className="text-xl font-semibold mb-4 border-b border-gray-200 pb-2">EDUCATION</h2>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between items-start">
-                  <h3 className="font-semibold">Degree Name</h3>
-                  <span className="text-sm text-gray-600">Graduation Year</span>
-                </div>
-                <p className="text-gray-600">Institution Name</p>
-              </div>
-            </div>
-          </section>
+          {columnSections[2].map(section => (
+            <section key={section.id} className="mb-8">
+              <h2 className="text-xl font-semibold mb-4 border-b border-gray-200 pb-2">
+                {section.title.toUpperCase()}
+              </h2>
+              {renderSection(section)}
+            </section>
+          ))}
         </div>
       </div>
     </div>
